@@ -1,28 +1,18 @@
 import 'dotenv/config';
-import axios from 'axios';
 import { scanDataFiles } from '../utils/fileScanner.js';
 import { readAllDocuments } from './readers.js';
 import { chunkText } from '../config/llamaindex.js';
 import { getCollection, resetCollection } from '../config/chroma.js';
+import { generateEmbedding, getEmbeddingProvider } from '../config/embeddings.js';
 
-const OLLAMA_URL = process.env.OLLAMA_URL || 'http://localhost:11434';
-const EMBED_MODEL = 'all-minilm';
 const BATCH_SIZE = 50;
-
-async function generateEmbedding(text) {
-  const response = await axios.post(`${OLLAMA_URL}/api/embeddings`, {
-    model: EMBED_MODEL,
-    prompt: text,
-  });
-  return response.data.embedding;
-}
 
 function buildChunkId(sourceId, chunkIndex) {
   return `${sourceId}_chunk_${chunkIndex}`;
 }
 
 export async function runIngestionPipeline(reset = false) {
-  console.log('[loader] Starting ingestion pipeline...');
+  console.log(`[loader] Starting ingestion pipeline... (embedding provider: ${getEmbeddingProvider()})`);
 
   const collection = reset ? await resetCollection() : await getCollection();
 

@@ -1,7 +1,6 @@
 import { ChromaClient } from 'chromadb';
 
 const COLLECTION_NAME = 'knowledge';
-const EMBEDDING_DIMENSION = 384;
 
 let chromaClient = null;
 let collection = null;
@@ -18,7 +17,12 @@ export async function getCollection() {
     const client = await getChromaClient();
     collection = await client.getOrCreateCollection({
       name: COLLECTION_NAME,
-      metadata: { 'hnsw:space': 'cosine', dimension: EMBEDDING_DIMENSION },
+      metadata: { 'hnsw:space': 'cosine' },
+      embeddingFunction: {
+        generate: async () => {
+          throw new Error('Chroma should never auto-embed: embeddings are always supplied explicitly');
+        },
+      },
     });
   }
   return collection;
@@ -33,4 +37,4 @@ export async function resetCollection() {
   return getCollection();
 }
 
-export { COLLECTION_NAME, EMBEDDING_DIMENSION };
+export { COLLECTION_NAME };

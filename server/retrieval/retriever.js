@@ -1,20 +1,10 @@
-import axios from 'axios';
 import { getCollection } from '../config/chroma.js';
+import { generateEmbedding } from '../config/embeddings.js';
 
-const OLLAMA_URL = process.env.OLLAMA_URL || 'http://localhost:11434';
-const EMBED_MODEL = 'all-minilm';
 const TOP_K = 8;
 
-async function generateQueryEmbedding(query) {
-  const response = await axios.post(`${OLLAMA_URL}/api/embeddings`, {
-    model: EMBED_MODEL,
-    prompt: query,
-  });
-  return response.data.embedding;
-}
-
 export async function search(query) {
-  const embedding = await generateQueryEmbedding(query);
+  const embedding = await generateEmbedding(query);
   const collection = await getCollection();
 
   const results = await collection.query({

@@ -7,7 +7,11 @@
   "scripts": {
     "start": "node server/index.js",
     "dev": "nodemon server/index.js",
-    "ingest": "node server/ingestion/loader.js"
+    "ingest": "node server/ingestion/loader.js",
+    "start:zscaler": "NODE_EXTRA_CA_CERTS=./certs-zscaler.pem node server/index.js",
+    "dev:zscaler": "NODE_EXTRA_CA_CERTS=./certs-zscaler.pem nodemon server/index.js",
+    "ingest:zscaler": "NODE_EXTRA_CA_CERTS=./certs-zscaler.pem node server/ingestion/loader.js",
+    "certs:zscaler": "security find-certificate -a -p /System/Library/Keychains/SystemRootCertificates.keychain > certs-zscaler.pem && security find-certificate -a -c Zscaler -p /Library/Keychains/System.keychain >> certs-zscaler.pem && echo 'Wrote certs-zscaler.pem'"
   },
   "dependencies": {
     "axios": "^1.6.7",

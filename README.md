@@ -342,3 +342,35 @@ The API enforces 10 requests per minute per IP address. Exceeding this returns H
 | `OLLAMA_URL` | `http://localhost:11434` | Ollama server URL |
 | `CHROMA_URL` | `http://localhost:8000` | ChromaDB server URL |
 | `PORT` | `3001` | Express server port |
+| `EMBEDDING_PROVIDER` | `ollama` | `ollama` (spec default) or `jina` (cloud fallback) |
+| `JINA_API_KEY` | — | Required only when `EMBEDDING_PROVIDER=jina`. Free key from jina.ai |
+| `JINA_EMBED_MODEL` | `jina-embeddings-v2-base-en` | Jina embedding model (768-dim) |
+
+## Embedding Provider (swappable)
+
+The embedding step is provider-agnostic ([server/config/embeddings.js](server/config/embeddings.js)). The spec default is **Ollama + all-minilm** (local, 384-dim). A cloud fallback (**Jina**, 768-dim) is included for environments where Ollama's model registry is blocked (e.g. corporate networks running Zscaler — the model blob is hosted on Cloudflare R2, which Zscaler's TLS interception can break).
+
+To switch, change one line in `.env`:
+```bash
+EMBEDDING_PROVIDER=ollama   # local, per spec
+# or
+EMBEDDING_PROVIDER=jina     # cloud fallback
+```
+
+ChromaDB infers the vector dimension automatically, so switching providers just requires a fresh ingest (`node server/ingestion/loader.js --reset`).
+
+## Corporate TLS / Zscaler
+
+Node.js does not read the macOS keychain, so on machines with Zscaler (or any TLS-intercepting proxy) the Groq SDK fails with `unable to get local issuer certificate`. Fix:
+
+```bash
+# Export the system + Zscaler root CAs into a local bundle (gitignored)
+npm run certs:zscaler
+
+# Then use the :zscaler script variants, which set NODE_EXTRA_CA_CERTS
+npm run dev:zscaler        # instead of npm run dev
+npm run start:zscaler      # instead of npm start
+npm run ingest:zscaler     # instead of npm run ingest
+```
+
+Teammates not behind Zscaler just use the plain `npm run dev` / `start` / `ingest`.
