@@ -1,0 +1,19 @@
+{
+  "id": "ticket_NEX-244",
+  "key": "NEX-244",
+  "title": "Missing Index on documents.created_at Post-Migration",
+  "type": "Bug",
+  "status": "Done",
+  "priority": "Critical",
+  "assignee": "Riya Desai",
+  "reporter": "Riya Desai",
+  "created": "2024-11-10",
+  "updated": "2024-11-11",
+  "description": "Post-migration index verification failure. The documents.created_at index was dropped during PostgreSQL migration (NEX-189) and not recreated. The cleanup script caught a lock timeout error and swallowed it silently.\n\nImpact: Search queries performing full table scans on 180M row documents table. 35% of users experienced timeouts for 1.5 hours on Nov 10.\n\nHotfix: PR #52 — created index concurrently, performance restored at 15:45 IST Nov 10.\n\nRoot cause and preventive measures documented in email_08 and incident_review_01 meeting.\n\nPermanent fixes (from email_08):\n- Diana Chen: Add index verification to migration runbook by Nov 19\n- Kenji Nakamura: Automated index health checks by Nov 22\n- Arjun Mehta: Review all migration scripts by Nov 20",
+  "linked_tickets": ["NEX-189"],
+  "linked_emails": ["email_08", "email_11"],
+  "linked_meetings": ["incident_review_01", "standup_04"],
+  "linked_prs": ["pr_52"],
+  "linked_docs": ["incident-postmortem-nov10", "database-migration-plan"],
+  "labels": ["database", "incident", "post-mortem", "search"]
+}

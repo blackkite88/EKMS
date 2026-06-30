@@ -1,0 +1,8 @@
+{
+  "id": "email_07",
+  "from": "priya.sharma@nexora.com",
+  "to": "diana.chen@nexora.com",
+  "subject": "RE: Database Migration — Team Coordination Approved",
+  "date": "2024-10-24T08:15:00Z",
+  "body": "Hi Diana,\n\nConfirming my approval for the database migration on November 3. I've set up the on-call rota — Arjun Mehta will be primary on-call, Riya Desai as backup.\n\nI've also sent the maintenance notification to all@nexora.com as Raj requested.\n\nPlease make sure the migration runbook in docs/database-migration-plan.md is updated with the 72-hour rollback window change Raj specified.\n\nGood luck on Sunday!\n\nPriya"
+}

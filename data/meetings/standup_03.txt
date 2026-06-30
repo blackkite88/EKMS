@@ -1,0 +1,49 @@
+Meeting: Engineering Daily Standup
+Date: 2024-11-08
+Attendees: Priya Sharma, Arjun Mehta, Riya Desai, Kenji Nakamura, Diana Chen
+Facilitator: Priya Sharma
+
+--- STANDUP NOTES ---
+
+PRIYA SHARMA:
+Yesterday: Received Kenji's PCI-DSS compliance findings (email_02). This is a serious blocker.
+Today: Escalate to Raj Patel. Prepare executive summary for board call (email_03).
+Blockers: Payments December 15 date is no longer achievable.
+
+ARJUN MEHTA:
+Yesterday: PR #47 submitted. Kenji started security review.
+Today: Address Kenji's review comments on PR #47 (email_09).
+Blockers: Waiting on Priya's decision about the Stripe webhook approach.
+
+RIYA DESAI:
+Yesterday: Completed refund endpoint with tests. All passing.
+Today: Work on charge endpoint. Start integration test suite for NEX-204.
+Blockers: None.
+
+KENJI NAKAMURA:
+Yesterday: Sent PCI-DSS blocker email (email_02). Three critical gaps identified: network segmentation, audit logging, pen test.
+Today: Begin infrastructure changes for network segmentation. Create tickets for each gap.
+Blockers: Pen test vendor needs to be contracted ASAP — 3-4 week lead time.
+
+DIANA CHEN:
+Yesterday: Migration approved by Raj (email_06) and Priya (email_07).
+Today: Finalize runbook. Update standby window to 72 hours per Raj's requirement.
+Blockers: None. Migration on track for Nov 3.
+
+--- KEY DISCUSSION: Payments Feature Timeline ---
+Priya announced that the Payments feature (NEX-204) will be delayed from December 15, 2024 to approximately January 20, 2025.
+
+Reasons discussed:
+1. PCI-DSS compliance gaps require 3-4 weeks for pen test vendor + infrastructure changes (Kenji)
+2. API rate limiting conflict with Stripe webhooks needs resolution first (Arjun — NEX-231)
+3. Underestimation of compliance scope during initial planning
+
+Team agreed the January 20 date is achievable if pen test vendor is contracted by November 12.
+PR #47 review (see email_09 from Kenji) must be addressed before NEX-231 can close.
+
+--- ACTION ITEMS ---
+- Priya: Send executive summary to Raj — done (email_03)
+- Kenji: Contract pen test vendor by Nov 12
+- Kenji: Open tickets for each PCI-DSS gap
+- Arjun: Address PR #47 review comments (email_09)
+- Diana: Update migration runbook for 72-hour standby window

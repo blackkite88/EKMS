@@ -1,0 +1,8 @@
+{
+  "id": "email_09",
+  "from": "kenji.nakamura@nexora.com",
+  "to": "arjun.mehta@nexora.com",
+  "subject": "Security Review — PR #47 API Rate Limiter",
+  "date": "2024-11-07T11:20:00Z",
+  "body": "Hi Arjun,\n\nCompleted security review of PR #47 (feature/api-rate-limiting). Overall the implementation is solid but I have two blockers:\n\n1. The rate limiter uses IP address only. In environments behind a load balancer or NAT, this will incorrectly throttle multiple legitimate users sharing the same egress IP. We should also check the X-Forwarded-For header and use a composite key.\n\n2. There is no protection against distributed attacks using rotating IPs. Consider adding a token bucket per authenticated user ID in addition to IP-based limiting.\n\nNon-blocking suggestions:\n- Add a Retry-After header in the 429 response (industry standard)\n- Log throttled requests to the security audit trail\n\nSee the API rate limiting documentation at docs/api-rate-limiting.md for the architecture context.\n\nThis review is required before NEX-231 can be closed.\n\nKenji"
+}

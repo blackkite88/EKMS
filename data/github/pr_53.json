@@ -1,0 +1,27 @@
+{
+  "id": "pr_53",
+  "number": 53,
+  "title": "feat: Payments refund endpoint with partial refund support",
+  "branch": "feature/NEX-215-refund-endpoint",
+  "base": "main",
+  "author": "riya.desai",
+  "status": "merged",
+  "created": "2024-11-07",
+  "merged": "2024-11-12",
+  "reviewers": ["arjun.mehta", "priya.sharma"],
+  "description": "Implements POST /payments/refund endpoint (NEX-215).\n\nKey features:\n- Full refund: omit amount parameter\n- Partial refund: specify amount ≤ original charge\n- Partial refund edge case fix: validates that cumulative partial refunds do not exceed the original charge amount (discovered during implementation, mentioned in standup_02)\n- Writes refund event to payment_audit_log before processing (PCI-DSS — NEX-219)\n- Returns: { refund_id, status, refunded_amount, remaining_refundable }\n- Full integration test suite: 23 test cases including edge cases\n\nRelated: NEX-215, NEX-204, NEX-219, standup_02",
+  "files_changed": [
+    "services/payments/src/routes/refund.js",
+    "services/payments/src/services/refundService.js",
+    "services/payments/src/tests/refund.test.js"
+  ],
+  "review_comments": [
+    {
+      "author": "arjun.mehta",
+      "comment": "The cumulative partial refund check is exactly right. Good edge case catch. Test coverage is excellent.",
+      "date": "2024-11-11"
+    }
+  ],
+  "linked_tickets": ["NEX-215", "NEX-204", "NEX-219"],
+  "linked_meetings": ["standup_02"]
+}

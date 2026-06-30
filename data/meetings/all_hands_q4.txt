@@ -1,0 +1,35 @@
+Meeting: Q4 All Hands — Engineering
+Date: 2024-11-01
+Attendees: All Engineering (35 engineers), Raj Patel (CTO), Priya Sharma (EM), Maya Iyer (Product), Sarah Kim (Design)
+Facilitator: Raj Patel
+
+--- ALL HANDS NOTES ---
+
+RAJ PATEL — OPENING:
+Q3 was strong — we shipped the Analytics Dashboard, improved P99 API latency by 28%, and onboarded 12 new enterprise customers. Q4 is about monetization and scale.
+
+Q4 PRIORITIES (referenced in email_10):
+1. Payments Feature (NEX-204): The highest priority initiative. Enables direct billing, reducing our dependency on third-party invoicing. Target: December 15. Priya Sharma leading.
+2. Database Migration (NEX-189): PostgreSQL 13 → 16 upgrade. Enables partitioning for scale. Target: November 3 maintenance window. Diana Chen leading.
+3. Search Performance (NEX-198): Customer-facing improvement. Current P95: 380ms. Target: 200ms. Riya Desai leading.
+4. API Rate Limiting (NEX-231): Security and stability initiative. Required for Payments. Arjun Mehta leading.
+5. Mobile SDK v2 (NEX-210): New mobile SDK with offline support. Mobile team leading.
+
+MAYA IYER — PRODUCT:
+Payments feature will unlock the Enterprise tier upsell. Current revenue impact estimate: $2.1M ARR in Q1 2025 if we hit December 15.
+
+PRIYA SHARMA — ENGINEERING:
+Emphasized that Payments is a complex initiative — PCI-DSS compliance is not optional and should not be underestimated. Flagged potential timeline risk from compliance scope.
+
+SARAH KIM — DESIGN:
+Checkout UI designs ready and handed off. Waiting for backend API spec to be finalized.
+
+Q&A HIGHLIGHTS:
+- Q: Will we work weekends for the Payments deadline? A (Raj): No forced overtime. We will adjust scope before we burn people out.
+- Q: What is the fallback if December 15 is missed? A (Priya): We have a January contingency. Will communicate early.
+
+--- ACTION ITEMS ---
+- Raj: Send Q4 priority recap email — done (email_10)
+- Priya: Finalize Payments API spec and share with Sarah Kim by Nov 8
+- Diana: Send migration approval request — done (email_05)
+- Arjun: Start rate limiter implementation — NEX-231

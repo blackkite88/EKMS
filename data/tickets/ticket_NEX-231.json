@@ -1,0 +1,19 @@
+{
+  "id": "ticket_NEX-231",
+  "key": "NEX-231",
+  "title": "API Rate Limiting — Stripe Webhook Conflict",
+  "type": "Bug",
+  "status": "In Review",
+  "priority": "High",
+  "assignee": "Arjun Mehta",
+  "reporter": "Arjun Mehta",
+  "created": "2024-11-06",
+  "updated": "2024-11-12",
+  "description": "The IP-based rate limiter implemented in PR #47 throttles Stripe webhook retries during high payment volume periods. Stripe uses a small range of IPs and fires 3-5 retries per failed webhook, consistently hitting the 100 req/min per-IP limit.\n\nApproved solution (email_12): Dedicated /webhooks endpoint with HMAC signature verification, bypassing IP rate limiter. This is more secure than IP whitelisting.\n\nSecurity review from Kenji (email_09) also identified additional issues with PR #47:\n- X-Forwarded-For header not checked (problematic behind load balancers)\n- Missing Retry-After header in 429 responses\n\nBoth issues being addressed in the updated PR #47. New PR for /webhooks endpoint to follow.\n\nBlocker for NEX-204 Payments feature.",
+  "linked_tickets": ["NEX-204"],
+  "linked_emails": ["email_04", "email_09", "email_12"],
+  "linked_meetings": ["standup_02", "standup_03"],
+  "linked_prs": ["pr_47"],
+  "linked_docs": ["api-rate-limiting"],
+  "labels": ["rate-limiting", "stripe", "security", "payments", "blocker"]
+}

@@ -1,0 +1,36 @@
+Meeting: Engineering Daily Standup
+Date: 2024-11-04
+Attendees: Priya Sharma, Arjun Mehta, Riya Desai, Kenji Nakamura, Diana Chen
+Facilitator: Priya Sharma
+
+--- STANDUP NOTES ---
+
+PRIYA SHARMA:
+Yesterday: Sent sprint kickoff email for Payments feature (email_01). Reviewed Q4 roadmap with Raj.
+Today: Schedule kickoff call, align with product on frontend scope.
+Blockers: None.
+
+ARJUN MEHTA:
+Yesterday: Started Stripe integration work for NEX-204. Set up local test environment.
+Today: Begin implementing charge and refund API endpoints.
+Blockers: Waiting for Stripe API keys from DevOps. Raised in ticket NEX-207.
+
+RIYA DESAI:
+Yesterday: Reviewed backend API spec for the Payments feature.
+Today: Start drafting the refund endpoint tests. Review existing payment models.
+Blockers: Need schema finalized before I can write integration tests. Blocked by NEX-204.
+
+KENJI NAKAMURA:
+Yesterday: Started PCI-DSS compliance scope assessment.
+Today: Continue compliance audit. Reviewing cardholder data environment requirements.
+Blockers: None yet, but anticipating infrastructure findings this week.
+
+DIANA CHEN:
+Yesterday: Finalized PostgreSQL migration plan for NEX-189.
+Today: Send approval request email to Raj and Priya (email_05).
+Blockers: Need CTO and Engineering Manager sign-off before scheduling the maintenance window.
+
+--- ACTION ITEMS ---
+- Arjun: Follow up with DevOps re: Stripe API keys — NEX-207 — by Nov 5
+- Diana: Send migration approval email — done (email_05)
+- Kenji: Report PCI-DSS findings by Nov 8

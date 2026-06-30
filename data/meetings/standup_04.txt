@@ -1,0 +1,37 @@
+Meeting: Engineering Daily Standup
+Date: 2024-11-11
+Attendees: Priya Sharma, Arjun Mehta, Riya Desai, Kenji Nakamura, Diana Chen
+Facilitator: Priya Sharma
+
+--- STANDUP NOTES ---
+
+PRIYA SHARMA:
+Yesterday: Sent executive update to Raj about Payments delay (email_03).
+Today: Review post-mortem from Riya (email_08). Update project timeline in NEX-204.
+Blockers: None.
+
+ARJUN MEHTA:
+Yesterday: Reviewed and addressed Kenji's security comments on PR #47. Submitted updated PR.
+Today: Start implementation of dedicated /webhooks endpoint per Priya's decision (email_12).
+Blockers: None — decision received.
+
+RIYA DESAI:
+Yesterday: Investigated the search performance incident from Nov 10. Wrote post-mortem (email_08).
+Today: Monitor search performance. Verify fix from PR #52 is holding.
+Blockers: None.
+
+KENJI NAKAMURA:
+Yesterday: Contracted pen test vendor. Scheduled for Nov 25 - Dec 6.
+Today: Begin network segmentation work for PCI-DSS gap 1.
+Blockers: None.
+
+DIANA CHEN:
+Yesterday: Investigated NEX-244 (missing index issue from migration). Confirmed root cause.
+Today: Update migration runbook to include post-migration index verification checklist.
+Blockers: None.
+
+--- ACTION ITEMS ---
+- Arjun: Complete /webhooks endpoint PR by Nov 15 — new PR separate from #47
+- Kenji: Begin network segmentation by Nov 12
+- Diana: Update migration runbook index verification checklist by Nov 19 (per email_08)
+- Riya: Continue monitoring search P95 latency — target < 200ms (NEX-198)

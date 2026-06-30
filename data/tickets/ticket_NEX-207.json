@@ -1,0 +1,16 @@
+{
+  "id": "ticket_NEX-207",
+  "key": "NEX-207",
+  "title": "Provision Stripe API Keys for Development Environment",
+  "type": "Task",
+  "status": "Done",
+  "priority": "High",
+  "assignee": "DevOps Team",
+  "reporter": "Arjun Mehta",
+  "created": "2024-11-04",
+  "updated": "2024-11-06",
+  "description": "Stripe test API keys need to be provisioned in the development environment and injected into the secrets manager. Required for Arjun Mehta to begin Stripe integration work on NEX-204.\n\nRaised in standup_01 as a blocker. Resolved by DevOps on Nov 6 — keys now available in AWS Secrets Manager under /nexora/dev/stripe.",
+  "linked_tickets": ["NEX-204"],
+  "linked_meetings": ["standup_01"],
+  "labels": ["devops", "stripe", "payments"]
+}

@@ -1,0 +1,8 @@
+{
+  "id": "email_03",
+  "from": "priya.sharma@nexora.com",
+  "to": "raj.patel@nexora.com",
+  "subject": "Payments Feature Delay — Executive Summary",
+  "date": "2024-11-09T10:00:00Z",
+  "body": "Hi Raj,\n\nI wanted to give you a heads-up before the board call. The Payments feature will be delayed from December 15 to approximately January 20, 2025.\n\nRoot cause: PCI-DSS Level 1 compliance requirements identified by Kenji Nakamura (see email_02) require infrastructure changes and a mandatory third-party penetration test. The pen test alone takes 3–4 weeks to complete and schedule.\n\nAdditional factors:\n- The Stripe integration has a secondary blocker: Arjun Mehta found that our API rate limiting implementation (tracked in NEX-231) conflicts with Stripe's webhook retry mechanism. See ticket NEX-231 and the related PR #47 which is currently in review.\n- We underestimated the compliance scope during initial planning.\n\nI'm confident the January 20 date is achievable if the pen test vendor is contracted this week. I'll have a formal revised timeline ready by EOD.\n\nBest,\nPriya"
+}

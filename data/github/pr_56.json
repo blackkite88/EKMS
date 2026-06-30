@@ -1,0 +1,24 @@
+{
+  "id": "pr_56",
+  "number": 56,
+  "title": "feat: dedicated /webhooks/stripe endpoint with HMAC verification",
+  "branch": "feature/NEX-240-stripe-webhook-endpoint",
+  "base": "main",
+  "author": "arjun.mehta",
+  "status": "open",
+  "created": "2024-11-12",
+  "merged": null,
+  "reviewers": ["kenji.nakamura"],
+  "description": "Implements POST /webhooks/stripe endpoint (NEX-240).\n\nThis is the resolution to the Stripe webhook + rate limiter conflict (NEX-231, email_04). Approach approved by Priya Sharma in email_12: dedicated endpoint with HMAC verification instead of IP whitelisting.\n\nImplementation:\n- Verifies Stripe-Signature header using stripe.webhooks.constructEvent()\n- Returns 200 immediately after signature verification\n- Processes events asynchronously via Bull/Redis queue\n- Handles: payment_intent.succeeded, payment_intent.payment_failed, charge.refunded, charge.dispute.created\n- All events written to payment_audit_log (NEX-219)\n- Endpoint is explicitly excluded from rate limiter middleware (NEX-231)\n\nSecurity: signature verification replaces IP-based trust. Even if Stripe's IP ranges change, only signed events from our Stripe account are accepted.\n\nRelated: NEX-240, NEX-231, NEX-204, NEX-219, email_04, email_12, docs/api-rate-limiting.md",
+  "files_changed": [
+    "services/payments/src/routes/webhooks.js",
+    "services/payments/src/services/webhookProcessor.js",
+    "services/payments/src/queues/webhookQueue.js",
+    "services/payments/src/tests/webhooks.test.js",
+    "services/payments/src/app.js"
+  ],
+  "review_comments": [],
+  "linked_tickets": ["NEX-240", "NEX-231", "NEX-204", "NEX-219"],
+  "linked_emails": ["email_04", "email_12"],
+  "linked_docs": ["api-rate-limiting", "payments-architecture", "stripe-integration-guide"]
+}

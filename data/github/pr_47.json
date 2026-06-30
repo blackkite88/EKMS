@@ -1,0 +1,28 @@
+{
+  "id": "pr_47",
+  "number": 47,
+  "title": "feat: API rate limiter with X-Forwarded-For composite key",
+  "branch": "feature/api-rate-limiting",
+  "base": "main",
+  "author": "arjun.mehta",
+  "status": "merged",
+  "created": "2024-11-06",
+  "merged": "2024-11-13",
+  "reviewers": ["kenji.nakamura", "riya.desai"],
+  "description": "Implements IP-based rate limiting middleware for all API endpoints. After security review by Kenji Nakamura (email_09), updated to:\n- Use X-Forwarded-For header + user ID composite key to correctly handle load balancers and NAT (NEX-233)\n- Add Retry-After header to all 429 responses (RFC 7231 compliance)\n- Log throttled requests to security audit trail\n\nThe /webhooks/stripe endpoint is explicitly excluded — see PR #56 for that endpoint's HMAC-based auth approach (approved in email_12).\n\nRelated: NEX-231, NEX-233, email_04, email_09, email_12, docs/api-rate-limiting.md",
+  "files_changed": [
+    "src/middleware/rateLimiter.js",
+    "src/middleware/rateLimiter.test.js",
+    "src/app.js"
+  ],
+  "review_comments": [
+    {
+      "author": "kenji.nakamura",
+      "comment": "X-Forwarded-For fix LGTM. Retry-After header correctly implemented. Approve with the audit logging added.",
+      "date": "2024-11-12"
+    }
+  ],
+  "linked_tickets": ["NEX-231", "NEX-233"],
+  "linked_emails": ["email_04", "email_09", "email_12"],
+  "linked_docs": ["api-rate-limiting"]
+}

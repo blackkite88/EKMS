@@ -1,0 +1,17 @@
+{
+  "id": "ticket_NEX-215",
+  "key": "NEX-215",
+  "title": "Payments — Refund Endpoint Implementation",
+  "type": "Story",
+  "status": "Done",
+  "priority": "High",
+  "assignee": "Riya Desai",
+  "reporter": "Priya Sharma",
+  "created": "2024-11-04",
+  "updated": "2024-11-11",
+  "description": "Implement POST /payments/refund API endpoint. Supports full and partial refunds via Stripe Refunds API.\n\nAcceptance criteria:\n- Accepts payment_intent_id, amount (optional — if omitted, full refund)\n- Validates amount does not exceed original charge\n- Handles partial refund edge case (multiple partial refunds summing to original amount)\n- Writes refund event to payment_audit_log (NEX-219)\n- Returns refund_id, status, refunded_amount\n\nPartial refund edge case discovered and fixed during implementation (standup_02). Full test suite included in PR #53.",
+  "linked_tickets": ["NEX-204", "NEX-219"],
+  "linked_meetings": ["standup_02"],
+  "linked_prs": ["pr_53"],
+  "labels": ["payments", "stripe", "api", "refunds"]
+}

@@ -1,0 +1,8 @@
+{
+  "id": "email_04",
+  "from": "arjun.mehta@nexora.com",
+  "to": "priya.sharma@nexora.com",
+  "subject": "API Rate Limiting — Stripe Webhook Conflict",
+  "date": "2024-11-06T16:45:00Z",
+  "body": "Hi Priya,\n\nI've hit a significant issue with the Stripe integration. Our current API rate limiter (implemented in PR #47 — branch feature/api-rate-limiting) aggressively throttles incoming webhook events from Stripe when payment volumes are high.\n\nDuring load testing, Stripe's retry mechanism fires 3–5 times per failed webhook, which pushes us well over our 100 req/min per-IP limit. Because Stripe uses a small range of IPs, they hit the throttle consistently.\n\nProposed fix:\n1. Whitelist Stripe's published IP ranges in the rate limiter.\n2. Alternatively, create a dedicated /webhooks endpoint that bypasses rate limiting entirely with HMAC signature verification instead.\n\nI prefer option 2 for security. I've documented both approaches in the API Rate Limiting doc (docs/api-rate-limiting.md).\n\nTicket NEX-231 tracks this. I need a decision from you before I can proceed so I can unblock the Payments sprint.\n\nThanks,\nArjun Mehta\nSenior Backend Engineer"
+}

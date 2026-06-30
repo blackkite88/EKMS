@@ -1,0 +1,18 @@
+{
+  "id": "ticket_NEX-233",
+  "key": "NEX-233",
+  "title": "Add X-Forwarded-For Support to Rate Limiter",
+  "type": "Bug",
+  "status": "Done",
+  "priority": "High",
+  "assignee": "Arjun Mehta",
+  "reporter": "Kenji Nakamura",
+  "created": "2024-11-07",
+  "updated": "2024-11-12",
+  "description": "Security review of PR #47 (email_09) identified that the rate limiter uses only the direct request IP. Behind a load balancer or NAT, multiple legitimate users share the same egress IP and would be incorrectly throttled together.\n\nFix: Check X-Forwarded-For header and use a composite key (forwarded IP + user ID for authenticated routes).\n\nAlso adding:\n- Retry-After header in 429 responses (RFC 7231 compliance)\n- Security audit trail logging for throttled requests\n\nFixed in the updated PR #47. Addresses Kenji's review from email_09.",
+  "linked_tickets": ["NEX-231"],
+  "linked_emails": ["email_09", "email_12"],
+  "linked_prs": ["pr_47"],
+  "linked_docs": ["api-rate-limiting"],
+  "labels": ["rate-limiting", "security", "bug"]
+}

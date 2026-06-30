@@ -1,0 +1,19 @@
+{
+  "id": "ticket_NEX-189",
+  "key": "NEX-189",
+  "title": "Database Migration — PostgreSQL 13 to PostgreSQL 16",
+  "type": "Task",
+  "status": "Done",
+  "priority": "High",
+  "assignee": "Diana Chen",
+  "reporter": "Diana Chen",
+  "created": "2024-10-10",
+  "updated": "2024-11-04",
+  "description": "Migrate production database from PostgreSQL 13.12 to PostgreSQL 16.1. Key improvements: native table partitioning (required for events table at 180M rows), improved query planner, logical replication enhancements.\n\nApprovals: Raj Patel (email_06, Oct 23), Priya Sharma (email_07, Oct 24), Legal (data residency confirmed separately).\n\nMaintenance window: November 3, 02:00 - 06:00 IST.\n\nResult: Completed successfully in 3h 43m (email_11). Events table partitioned by month, 40% query performance improvement. Known follow-up: NEX-244 (missing index issue).\n\nSee docs/database-migration-plan.md for full runbook.",
+  "linked_tickets": ["NEX-244"],
+  "linked_emails": ["email_05", "email_06", "email_07", "email_11"],
+  "linked_meetings": ["standup_01", "all_hands_q4", "incident_review_01"],
+  "linked_prs": ["pr_50"],
+  "linked_docs": ["database-migration-plan"],
+  "labels": ["database", "postgresql", "infrastructure", "maintenance"]
+}

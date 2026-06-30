@@ -1,0 +1,8 @@
+{
+  "id": "email_01",
+  "from": "priya.sharma@nexora.com",
+  "to": "engineering@nexora.com",
+  "subject": "Payments Feature — Sprint Planning Kickoff",
+  "date": "2024-11-04T09:15:00Z",
+  "body": "Hi team,\n\nI wanted to kick off the sprint planning discussion for our upcoming Payments feature rollout. As per the Q4 roadmap, we are targeting a release date of December 15, 2024.\n\nKey deliverables this sprint:\n- Payment gateway integration (Stripe) — assigned to Arjun Mehta\n- PCI-DSS compliance audit — assigned to Kenji Nakamura\n- Backend API for charge/refund endpoints — assigned to Riya Desai\n- Frontend checkout UI — to be coordinated with the product team\n\nPlease review ticket NEX-204 which tracks the overall Payments epic. The PCI-DSS compliance requirement is a blocker for go-live, so Kenji please flag any blockers as soon as possible.\n\nI'll schedule the kickoff call for tomorrow at 10 AM IST.\n\nBest,\nPriya Sharma\nEngineering Manager, Nexora Inc."
+}

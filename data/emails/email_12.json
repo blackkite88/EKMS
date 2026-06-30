@@ -1,0 +1,8 @@
+{
+  "id": "email_12",
+  "from": "priya.sharma@nexora.com",
+  "to": "arjun.mehta@nexora.com",
+  "subject": "Decision: API Rate Limiter Approach for Stripe Webhooks",
+  "date": "2024-11-10T09:00:00Z",
+  "body": "Hi Arjun,\n\nAfter reviewing your proposal in email_04 and Kenji's security feedback in email_09, I'm approving Option 2: dedicated /webhooks endpoint with HMAC signature verification, bypassing the IP-based rate limiter.\n\nRationale:\n- Option 2 is more secure (cryptographic verification vs IP whitelist)\n- Stripe's IP ranges can change and maintaining a whitelist is operationally fragile\n- Kenji's review also identified the X-Forwarded-For issue in the current rate limiter — this needs to be fixed in PR #47 before merge regardless\n\nPlease update PR #47 with Kenji's feedback (X-Forwarded-For composite key, Retry-After header) and create a new PR for the /webhooks endpoint.\n\nThis unblocks NEX-231 and by extension the Payments sprint.\n\nPriya"
+}

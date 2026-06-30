@@ -1,0 +1,42 @@
+Meeting: Architecture Review — Payments Service
+Date: 2024-11-05
+Attendees: Priya Sharma, Arjun Mehta, Diana Chen, Kenji Nakamura
+Facilitator: Arjun Mehta
+
+--- ARCHITECTURE REVIEW NOTES ---
+
+AGENDA: Review the proposed microservice architecture for the Payments feature (NEX-204)
+
+ARJUN MEHTA — PRESENTATION:
+The Payments service will be deployed as a standalone microservice with:
+- Dedicated PostgreSQL schema (payments) isolated from main application schema
+- Stripe as primary payment processor, with Adyen as failover (Phase 2)
+- Async job queue (Bull/Redis) for webhook processing
+- Rate limiting on all public endpoints (see NEX-231 and docs/api-rate-limiting.md)
+
+KEY DECISIONS MADE:
+1. Network isolation: Payments service will run in a dedicated VPC subnet — required for PCI-DSS Level 1 (Kenji's input). This is the network segmentation gap identified in email_02.
+2. Audit logging: All payment events will be written to an immutable audit log table before any business logic executes. This addresses PCI-DSS audit logging requirement.
+3. Encryption: Card data will never be stored at Nexora — we will use Stripe tokenization exclusively.
+4. Webhook handling: Dedicated /webhooks endpoint with HMAC signature verification (Option 2 from email_04, confirmed in email_12).
+
+DIANA CHEN — DATABASE DESIGN:
+- Payments schema will use the new partitioned table approach from NEX-189.
+- Separate read replicas for payment reporting queries.
+- Schema migrations for payments will go through a separate approval process.
+
+KENJI NAKAMURA — SECURITY:
+- PCI-DSS Level 1 requires a formal QSA (Qualified Security Assessor) audit annually.
+- The pen test (scheduled Nov 25 per standup_03) is a prerequisite for QSA audit.
+- All engineers accessing the payments VPC must complete PCI-DSS training first.
+
+OPEN ITEMS:
+- PR #45 (payments service scaffold) needs review — Arjun to ping Riya
+- Adyen failover design deferred to Phase 2 — not blocking January release
+- PCI training schedule to be sent by Kenji by Nov 10
+
+--- ACTION ITEMS ---
+- Arjun: Request review on PR #45 from Riya Desai
+- Kenji: Send PCI-DSS training schedule to engineering team by Nov 10
+- Diana: Add payments schema to migration plan (NEX-189 follow-up ticket)
+- Priya: Confirm Adyen is officially Phase 2 — update NEX-204 description

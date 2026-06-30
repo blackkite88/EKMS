@@ -1,0 +1,35 @@
+{
+  "id": "pr_50",
+  "number": 50,
+  "title": "chore: PostgreSQL 16 migration scripts",
+  "branch": "chore/pg16-migration",
+  "base": "main",
+  "author": "diana.chen",
+  "status": "merged",
+  "created": "2024-10-28",
+  "merged": "2024-11-02",
+  "reviewers": ["arjun.mehta", "kenji.nakamura"],
+  "description": "Migration scripts for the PostgreSQL 13 → 16 upgrade (NEX-189). Includes:\n- Schema migration scripts\n- Table partitioning DDL for events table (monthly partitions)\n- Index creation scripts\n- Post-migration verification scripts\n- Rollback scripts\n\nMaintenance window: November 3, 02:00-06:00 IST. Approved by Raj Patel (email_06) and Priya Sharma (email_07).\n\nNOTE: A bug in the post-migration index creation script caused NEX-244 (index silently not created). See incident-postmortem-nov10.md and PR #52 for the hotfix. This PR's scripts have since been updated to re-raise exceptions instead of swallowing them.",
+  "files_changed": [
+    "db/migrations/v2_pg16_upgrade.sql",
+    "db/migrations/v2_partition_events.sql",
+    "db/migrations/v2_create_indexes.sql",
+    "db/migrations/v2_rollback.sql",
+    "db/scripts/post_migration_verify.py"
+  ],
+  "review_comments": [
+    {
+      "author": "kenji.nakamura",
+      "comment": "Rollback plan looks solid. Confirm the 72-hour standby window is in the runbook per Raj's requirement (email_06).",
+      "date": "2024-11-01"
+    },
+    {
+      "author": "diana.chen",
+      "comment": "Confirmed — updated runbook to 72 hours.",
+      "date": "2024-11-01"
+    }
+  ],
+  "linked_tickets": ["NEX-189", "NEX-244"],
+  "linked_emails": ["email_05", "email_06", "email_07", "email_11"],
+  "linked_docs": ["database-migration-plan"]
+}

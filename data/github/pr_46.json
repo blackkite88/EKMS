@@ -1,0 +1,33 @@
+{
+  "id": "pr_46",
+  "number": 46,
+  "title": "feat: immutable payment_audit_log table and write service",
+  "branch": "feature/NEX-219-payment-audit-log",
+  "base": "main",
+  "author": "arjun.mehta",
+  "status": "open",
+  "created": "2024-11-09",
+  "merged": null,
+  "reviewers": ["kenji.nakamura", "diana.chen"],
+  "description": "Implements the immutable payment_audit_log table and audit write service (NEX-219). PCI-DSS Level 1 requirement: log all access to cardholder data.\n\nSchema:\n```sql\nCREATE TABLE payment_audit_log (\n  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,\n  event_type VARCHAR(50) NOT NULL,\n  stripe_event_id VARCHAR(255),\n  user_id UUID,\n  amount INTEGER,\n  currency CHAR(3),\n  status VARCHAR(50),\n  ip_address INET,\n  metadata JSONB,\n  created_at TIMESTAMPTZ DEFAULT NOW()\n);\n\nALTER TABLE payment_audit_log ENABLE ROW LEVEL SECURITY;\nCREATE POLICY audit_log_insert_only ON payment_audit_log FOR INSERT TO payments_service WITH CHECK (true);\n```\n\nPartitioned by month using the partitioning pattern established in NEX-189 (Diana Chen's database migration).\n\nAudit service: writes synchronously before any business logic. If the audit write fails, the entire transaction is aborted — we never process a payment without an audit record.\n\nRelated: NEX-219, NEX-204, NEX-189, architecture_review_01, pci-dss-compliance.md",
+  "files_changed": [
+    "db/migrations/v3_payment_audit_log.sql",
+    "services/payments/src/services/auditService.js",
+    "services/payments/src/tests/auditService.test.js"
+  ],
+  "review_comments": [
+    {
+      "author": "diana.chen",
+      "comment": "Partitioning by month is the right call — consistent with the events table pattern from NEX-189. The RLS policy looks correct. One thing: make sure the partition creation job is automated, otherwise we'll need a manual step each month.",
+      "date": "2024-11-11"
+    },
+    {
+      "author": "arjun.mehta",
+      "comment": "Good catch Diana — added a pg_cron job to create next month's partition on the 25th of each month.",
+      "date": "2024-11-12"
+    }
+  ],
+  "linked_tickets": ["NEX-219", "NEX-204", "NEX-189"],
+  "linked_meetings": ["architecture_review_01"],
+  "linked_docs": ["pci-dss-compliance", "payments-architecture", "database-migration-plan"]
+}

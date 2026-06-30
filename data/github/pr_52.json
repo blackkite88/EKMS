@@ -1,0 +1,27 @@
+{
+  "id": "pr_52",
+  "number": 52,
+  "title": "hotfix: recreate missing documents.created_at index",
+  "branch": "hotfix/NEX-244-missing-index",
+  "base": "main",
+  "author": "riya.desai",
+  "status": "merged",
+  "created": "2024-11-10",
+  "merged": "2024-11-10",
+  "reviewers": ["arjun.mehta"],
+  "description": "HOTFIX — P1 incident response.\n\nThe documents.created_at index was silently not created during the post-migration script for NEX-189. This caused full table scans on the 180M row documents table, resulting in search timeouts for 35% of users for 1.5 hours on November 10, 2024.\n\nFix: CREATE INDEX CONCURRENTLY idx_documents_created_at ON documents(created_at)\n\nConcurrent build means no downtime required. Index build completed in ~5 minutes.\n\nSee email_08 (post-mortem summary) and incident-postmortem-nov10.md for full root cause and preventive actions.\n\nRelated: NEX-244, NEX-189, email_08, incident_review_01",
+  "files_changed": [
+    "db/hotfixes/recreate_documents_created_at_index.sql"
+  ],
+  "review_comments": [
+    {
+      "author": "arjun.mehta",
+      "comment": "LGTM. CONCURRENT is the right call — no locks. Approve for immediate merge.",
+      "date": "2024-11-10"
+    }
+  ],
+  "linked_tickets": ["NEX-244", "NEX-189"],
+  "linked_emails": ["email_08"],
+  "linked_meetings": ["incident_review_01"],
+  "linked_docs": ["incident-postmortem-nov10"]
+}

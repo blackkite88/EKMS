@@ -1,0 +1,9 @@
+{
+  "id": "email_02",
+  "from": "kenji.nakamura@nexora.com",
+  "to": "priya.sharma@nexora.com",
+  "cc": "engineering@nexora.com",
+  "subject": "RE: Payments Feature — PCI-DSS Compliance Blocker",
+  "date": "2024-11-08T14:32:00Z",
+  "body": "Hi Priya,\n\nFollowing up on the compliance audit I started this week. Unfortunately I've identified a critical blocker: our current infrastructure does not meet PCI-DSS Level 1 requirements for cardholder data environments.\n\nSpecifically:\n1. We are missing network segmentation between the payments service and the general application layer.\n2. The audit logging for card transactions is not yet implemented.\n3. We need a third-party penetration test before certification.\n\nThe pen test alone has a 3–4 week lead time. This means the December 15 date is no longer achievable.\n\nI've raised this in ticket NEX-217 and I'd recommend we discuss timeline adjustments in this week's engineering standup — see the meeting notes from standup_03 for context on what was already discussed.\n\nI'm targeting mid-January at the earliest for a compliant release.\n\nRegards,\nKenji Nakamura\nSecurity Engineer, Nexora Inc."
+}
