@@ -1,0 +1,7 @@
+{
+  "id": "email_09",
+  "subject": "Database Migration Approval",
+  "sender": "sarah.jenkins@nexora.com",
+  "recipient": "infra@nexora.com",
+  "body": "I am officially approving the database migration plan (see database-migration.md). Please proceed."
+}

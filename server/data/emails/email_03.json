@@ -1,0 +1,7 @@
+{
+  "id": "email_03",
+  "subject": "Server down",
+  "sender": "alerts@nexora.com",
+  "recipient": "infra@nexora.com",
+  "body": "Server is down."
+}

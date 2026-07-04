@@ -1,0 +1,3 @@
+Engineering Standup
+Attendees: Alice, Bob
+Summary: Normal day.

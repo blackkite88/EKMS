@@ -1,0 +1,8 @@
+{
+  "id": "ticket_11",
+  "title": "API Rate Limiting Issue",
+  "description": "The API is rate limiting too aggressively, causing the Payments feature to be delayed. See PR 405 for the proposed fix. Mentioned in email_04.",
+  "status": "In Progress",
+  "priority": "High",
+  "assignee": "Charlie"
+}

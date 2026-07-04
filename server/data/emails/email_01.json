@@ -1,0 +1,7 @@
+{
+  "id": "email_01",
+  "subject": "Welcome",
+  "sender": "hr@nexora.com",
+  "recipient": "all@nexora.com",
+  "body": "Welcome to the team!"
+}

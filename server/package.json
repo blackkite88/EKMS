@@ -1,0 +1,27 @@
+{
+  "name": "nexora-knowledge-brain",
+  "version": "1.0.0",
+  "description": "Enterprise Knowledge Management System Backend",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "ingest": "node -e \"import('./ingestion/loader.js').then(m => m.runIngestion()).catch(console.error)\""
+  },
+  "dependencies": {
+    "axios": "^1.6.8",
+    "chromadb": "^1.8.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.2.0",
+    "glob": "^10.3.12",
+    "gray-matter": "^4.0.3",
+    "groq-sdk": "^0.3.2",
+    "llamaindex": "latest"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}

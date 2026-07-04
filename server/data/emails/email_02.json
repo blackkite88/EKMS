@@ -1,0 +1,7 @@
+{
+  "id": "email_02",
+  "subject": "Lunch",
+  "sender": "bob@nexora.com",
+  "recipient": "alice@nexora.com",
+  "body": "Lunch at 12?"
+}

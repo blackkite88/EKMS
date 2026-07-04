@@ -1,0 +1,3 @@
+Engineering Standup - Last Week
+Attendees: Alice, Bob, Charlie, Sarah
+Summary: We discussed the API rate limiting issue causing the Payments feature delay (ticket_11). Charlie is working on PR 405 to fix it. Sarah Jenkins approved the database migration.

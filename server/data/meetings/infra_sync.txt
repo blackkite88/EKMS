@@ -1,0 +1,3 @@
+Infra Sync
+Attendees: Infra Team
+Summary: Discussed AWS costs.

@@ -1,0 +1,6 @@
+{
+  "id": "ticket_03",
+  "title": "Add unit tests",
+  "description": "Add unit tests for auth module.",
+  "status": "Todo"
+}

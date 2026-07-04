@@ -1,0 +1,7 @@
+{
+  "id": "email_04",
+  "subject": "Payments Feature Delayed",
+  "sender": "alice@nexora.com",
+  "recipient": "eng-team@nexora.com",
+  "body": "Team, the Payments feature is delayed. We are waiting on a fix for the API rate limiting issue. See ticket_11 for details. Also mentioned in meeting standup_03."
+}

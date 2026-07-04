@@ -1,0 +1,7 @@
+{
+  "id": "PR_405",
+  "title": "Fix API Rate Limiting",
+  "description": "This PR fixes the API rate limiting issue that blocked the Payments feature. Fixes ticket_11. Relates to architecture.md.",
+  "author": "Charlie",
+  "status": "Open"
+}

@@ -1,0 +1,7 @@
+{
+  "id": "email_11",
+  "subject": "Office Closed",
+  "sender": "hr@nexora.com",
+  "recipient": "all@nexora.com",
+  "body": "Office closed tomorrow."
+}
