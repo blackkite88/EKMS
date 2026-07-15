@@ -1,29 +1,37 @@
 {
   "name": "nexora-knowledge-brain",
-  "version": "1.0.0",
-  "description": "AI-powered Enterprise Knowledge Management Backend for Nexora Inc.",
+  "version": "2.0.0",
+  "description": "Enterprise Decision-Intelligence backend for Nexora Inc. — GraphRAG + ABAC + MCP over Groq, Neo4j, ChromaDB and Postgres.",
   "type": "module",
   "main": "server/index.js",
   "scripts": {
     "start": "node server/index.js",
     "dev": "nodemon server/index.js",
     "ingest": "node server/ingestion/loader.js",
+    "ingest:reset": "node server/ingestion/loader.js --reset",
+    "evals": "node server/evals/run.js",
     "start:zscaler": "NODE_EXTRA_CA_CERTS=./certs-zscaler.pem node server/index.js",
     "dev:zscaler": "NODE_EXTRA_CA_CERTS=./certs-zscaler.pem nodemon server/index.js",
     "ingest:zscaler": "NODE_EXTRA_CA_CERTS=./certs-zscaler.pem node server/ingestion/loader.js",
+    "evals:zscaler": "NODE_EXTRA_CA_CERTS=./certs-zscaler.pem node server/evals/run.js",
     "certs:zscaler": "security find-certificate -a -p /System/Library/Keychains/SystemRootCertificates.keychain > certs-zscaler.pem && security find-certificate -a -c Zscaler -p /Library/Keychains/System.keychain >> certs-zscaler.pem && echo 'Wrote certs-zscaler.pem'"
   },
   "dependencies": {
     "axios": "^1.6.7",
+    "bcryptjs": "^2.4.3",
     "chromadb": "^1.8.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.18.3",
     "glob": "^10.3.10",
+    "google-auth-library": "^9.6.3",
+    "googleapis": "^133.0.0",
     "gray-matter": "^4.0.3",
     "groq-sdk": "^0.3.3",
+    "jsonwebtoken": "^9.0.2",
     "llamaindex": "^0.3.15",
-    "ollama": "^0.5.1"
+    "neo4j-driver": "^5.18.0",
+    "pg": "^8.11.3"
   },
   "devDependencies": {
     "nodemon": "^3.1.0"

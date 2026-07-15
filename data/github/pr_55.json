@@ -1,33 +1,27 @@
 {
   "id": "pr_55",
+  "access": {
+    "department": "engineering",
+    "projects": [
+      "payments",
+      "infra"
+    ],
+    "min_clearance": 2,
+    "sensitivity": "internal"
+  },
   "number": 55,
-  "title": "feat: Payments charge endpoint with Stripe PaymentIntents",
-  "branch": "feature/NEX-212-charge-endpoint",
-  "base": "main",
-  "author": "arjun.mehta",
+  "title": "Charge endpoint",
+  "author": "Arjun Mehta",
   "status": "merged",
-  "created": "2024-11-08",
+  "branch": "feature/charge-endpoint",
+  "created": "2024-11-10",
   "merged": "2024-11-14",
-  "reviewers": ["riya.desai", "kenji.nakamura", "priya.sharma"],
-  "description": "Implements POST /payments/charge endpoint (NEX-212) using Stripe PaymentIntents API.\n\nFeatures:\n- Accepts: amount (cents), currency, payment_method_id, customer_id\n- Creates and confirms PaymentIntent in a single API call\n- Writes to payment_audit_log BEFORE Stripe API call (PCI-DSS NEX-219)\n- Handles Stripe errors: card_declined, insufficient_funds, authentication_required, rate_limit\n- Returns: { payment_intent_id, status, amount, currency }\n- Idempotency key support to prevent duplicate charges\n\nStripe keys fetched from AWS Secrets Manager at startup (NEX-207 provisioned the dev keys).\n\nRelated: NEX-212, NEX-204, NEX-219, stripe-integration-guide.md",
-  "files_changed": [
-    "services/payments/src/routes/charge.js",
-    "services/payments/src/services/chargeService.js",
-    "services/payments/src/services/stripeClient.js",
-    "services/payments/src/tests/charge.test.js"
+  "description": "POST /payments/charge via Stripe PaymentIntents (NEX-212). Writes payment_audit_log (NEX-219).",
+  "linked_tickets": [
+    "NEX-212",
+    "NEX-219"
   ],
-  "review_comments": [
-    {
-      "author": "kenji.nakamura",
-      "comment": "Audit log write before Stripe call is correct — this ensures we have a record even if the Stripe call fails. Approve.",
-      "date": "2024-11-13"
-    },
-    {
-      "author": "riya.desai",
-      "comment": "Idempotency key implementation is solid. Test coverage looks comprehensive.",
-      "date": "2024-11-13"
-    }
-  ],
-  "linked_tickets": ["NEX-212", "NEX-204", "NEX-219"],
-  "linked_docs": ["stripe-integration-guide", "payments-architecture"]
+  "linked_docs": [
+    "stripe-integration-guide"
+  ]
 }

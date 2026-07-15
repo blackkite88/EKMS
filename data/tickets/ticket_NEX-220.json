@@ -1,5 +1,13 @@
 {
   "id": "ticket_NEX-220",
+  "access": {
+    "department": "engineering",
+    "projects": [
+      "payments"
+    ],
+    "min_clearance": 4,
+    "sensitivity": "confidential"
+  },
   "key": "NEX-220",
   "title": "PCI-DSS: Third-Party Penetration Test",
   "type": "Task",
@@ -9,9 +17,18 @@
   "reporter": "Kenji Nakamura",
   "created": "2024-11-08",
   "updated": "2024-11-12",
-  "description": "Mandatory third-party penetration test of the Nexora payments infrastructure. Required for PCI-DSS Level 1 certification.\n\nVendor: SecureForge Ltd (contracted Nov 12 per standup_04 notes).\nSchedule: November 25 - December 6, 2024.\nScope: Payments microservice, VPC subnet (NEX-218), API endpoints, webhook handling (NEX-231 and related PR #47).\n\nBlocker for NEX-204 Payments go-live. This 3-4 week lead time is the primary reason the December 15 date was missed — see email_02 and email_03 for the full timeline discussion.\n\nKenji will provide daily status updates to Raj Patel during the test window (per sprint_review_01 action items).",
-  "linked_tickets": ["NEX-217", "NEX-204"],
-  "linked_emails": ["email_02", "email_03"],
-  "linked_meetings": ["standup_03", "standup_04", "sprint_review_01"],
-  "labels": ["security", "pci-dss", "pen-test", "compliance"]
+  "description": "Mandatory external pen test (SecureForge Ltd), Nov 25 - Dec 6. The 3-4 week lead time is the primary cause of the Dec 15 slip (email_02, email_03). Scope includes /webhooks (NEX-240).",
+  "linked_tickets": [
+    "NEX-217",
+    "NEX-204",
+    "NEX-240"
+  ],
+  "linked_emails": [
+    "email_02",
+    "email_03"
+  ],
+  "linked_meetings": [
+    "standup_03",
+    "sprint_review_01"
+  ]
 }

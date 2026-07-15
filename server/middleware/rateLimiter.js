@@ -1,43 +1,32 @@
-const requestLog = new Map();
+// In-memory sliding-window rate limiter: 10 requests per minute per IP.
 const WINDOW_MS = 60 * 1000;
 const MAX_REQUESTS = 10;
+const log = new Map(); // ip -> { count, windowStart }
 
-function cleanExpiredEntries() {
+function sweep() {
   const now = Date.now();
-  for (const [ip, data] of requestLog.entries()) {
-    if (now - data.windowStart > WINDOW_MS) {
-      requestLog.delete(ip);
-    }
+  for (const [ip, entry] of log.entries()) {
+    if (now - entry.windowStart > WINDOW_MS) log.delete(ip);
   }
 }
 
 export function rateLimiter(req, res, next) {
   const ip = req.ip || req.socket?.remoteAddress || 'unknown';
   const now = Date.now();
+  sweep();
 
-  cleanExpiredEntries();
-
-  if (!requestLog.has(ip)) {
-    requestLog.set(ip, { count: 1, windowStart: now });
+  const entry = log.get(ip);
+  if (!entry || now - entry.windowStart > WINDOW_MS) {
+    log.set(ip, { count: 1, windowStart: now });
     return next();
   }
-
-  const entry = requestLog.get(ip);
-
-  if (now - entry.windowStart > WINDOW_MS) {
-    entry.count = 1;
-    entry.windowStart = now;
-    return next();
-  }
-
   if (entry.count >= MAX_REQUESTS) {
     const retryAfter = Math.ceil((WINDOW_MS - (now - entry.windowStart)) / 1000);
     res.setHeader('Retry-After', retryAfter);
     return res.status(429).json({
-      error: `Rate limit exceeded. Max ${MAX_REQUESTS} requests per minute. Try again in ${retryAfter}s.`,
+      error: `Rate limit exceeded. Max ${MAX_REQUESTS} requests/minute. Retry in ${retryAfter}s.`,
     });
   }
-
   entry.count++;
-  next();
+  return next();
 }

@@ -1,43 +1,48 @@
+// Provider-agnostic embedding generation. The spec default is Ollama
+// (all-minilm, local); Jina is a cloud fallback for environments where the
+// Ollama model registry is unreachable (e.g. corporate TLS interception).
+// Both ingestion and retrieval import from here, so there is one source of
+// truth for how a vector is produced.
 import axios from 'axios';
+import { env } from './env.js';
 
-const PROVIDER = (process.env.EMBEDDING_PROVIDER || 'ollama').toLowerCase();
-
-const OLLAMA_URL = process.env.OLLAMA_URL || 'http://localhost:11434';
-const OLLAMA_MODEL = process.env.OLLAMA_EMBED_MODEL || 'all-minilm';
-
-const JINA_URL = 'https://api.jina.ai/v1/embeddings';
-const JINA_MODEL = process.env.JINA_EMBED_MODEL || 'jina-embeddings-v2-base-en';
+const OLLAMA_EMBED_ENDPOINT = `${env.ollamaUrl}/api/embeddings`;
+const JINA_EMBED_ENDPOINT = 'https://api.jina.ai/v1/embeddings';
 
 async function embedWithOllama(text) {
-  const response = await axios.post(`${OLLAMA_URL}/api/embeddings`, {
-    model: OLLAMA_MODEL,
+  const { data } = await axios.post(OLLAMA_EMBED_ENDPOINT, {
+    model: env.ollamaEmbedModel,
     prompt: text,
   });
-  return response.data.embedding;
+  return data.embedding;
 }
 
 async function embedWithJina(text) {
-  if (!process.env.JINA_API_KEY) {
-    throw new Error('JINA_API_KEY is not set in environment variables');
-  }
-  const response = await axios.post(
-    JINA_URL,
-    { model: JINA_MODEL, input: [text] },
-    { headers: { Authorization: `Bearer ${process.env.JINA_API_KEY}` } }
+  const { data } = await axios.post(
+    JINA_EMBED_ENDPOINT,
+    { model: env.jinaEmbedModel, input: [text] },
+    { headers: { Authorization: `Bearer ${env.jinaApiKey}` } }
   );
-  return response.data.data[0].embedding;
+  return data.data[0].embedding;
 }
 
 export async function generateEmbedding(text) {
-  switch (PROVIDER) {
-    case 'jina':
-      return embedWithJina(text);
-    case 'ollama':
-    default:
-      return embedWithOllama(text);
+  if (env.embeddingProvider === 'jina') return embedWithJina(text);
+  return embedWithOllama(text);
+}
+
+// Convenience: embed many texts sequentially. Kept simple/serial because
+// local Ollama is fast and Jina's free tier is rate-limited.
+export async function generateEmbeddings(texts) {
+  const out = [];
+  for (const text of texts) {
+    out.push(await generateEmbedding(text));
   }
+  return out;
 }
 
 export function getEmbeddingProvider() {
-  return PROVIDER;
+  return env.embeddingProvider;
 }
+
+export default generateEmbedding;

@@ -1,7 +1,15 @@
 {
   "id": "ticket_NEX-219",
+  "access": {
+    "department": "engineering",
+    "projects": [
+      "payments"
+    ],
+    "min_clearance": 4,
+    "sensitivity": "confidential"
+  },
   "key": "NEX-219",
-  "title": "PCI-DSS: Immutable Audit Log for Payment Transactions",
+  "title": "PCI-DSS: Immutable Payment Audit Log",
   "type": "Task",
   "status": "In Progress",
   "priority": "Critical",
@@ -9,9 +17,18 @@
   "reporter": "Kenji Nakamura",
   "created": "2024-11-08",
   "updated": "2024-11-12",
-  "description": "Implement an immutable audit log table for all payment transaction events. Required for PCI-DSS Level 1 compliance (NEX-217).\n\nDecision from architecture_review_01: Every payment event writes to the audit log BEFORE business logic executes. Log is append-only with row-level security — no UPDATE or DELETE permitted.\n\nSchema:\n- payment_audit_log(id, event_type, stripe_event_id, user_id, amount, currency, status, ip_address, timestamp)\n- Partitioned by month (using pattern from NEX-189)\n- Replicated to separate compliance schema with different access controls\n\nPR #46 in progress — draft implementation available for review.",
-  "linked_tickets": ["NEX-217", "NEX-204", "NEX-189"],
-  "linked_meetings": ["architecture_review_01"],
-  "linked_prs": ["pr_46"],
-  "labels": ["security", "pci-dss", "audit", "database"]
+  "description": "Append-only payment_audit_log written before business logic (PCI-DSS 10.2, NEX-217). Partitioned like NEX-189. PR #46.",
+  "linked_tickets": [
+    "NEX-217",
+    "NEX-204"
+  ],
+  "linked_meetings": [
+    "architecture_review_01"
+  ],
+  "linked_prs": [
+    "pr_46"
+  ],
+  "linked_docs": [
+    "payments-architecture"
+  ]
 }

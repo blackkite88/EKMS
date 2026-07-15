@@ -1,33 +1,25 @@
+---
+access:
+  department: engineering
+  projects: [payments, infra]
+  min_clearance: 2
+  sensitivity: internal
+---
 Meeting: Sprint Review — Sprint 22
 Date: 2024-11-15
-Attendees: Priya Sharma, Arjun Mehta, Riya Desai, Kenji Nakamura, Diana Chen, Raj Patel, Maya Iyer (Product)
-Facilitator: Priya Sharma
+Attendees: Priya, Arjun, Riya, Kenji, Diana, Raj Patel
 
---- SPRINT REVIEW NOTES ---
+COMPLETED:
+- NEX-189 PostgreSQL migration (email_11)
+- NEX-231 rate limiter PR #47 (pending merge)
+- NEX-244 search index hotfix PR #52
+- NEX-212 charge / NEX-215 refund endpoints
+DELAYED:
+- NEX-204 Payments -> Jan 20 (email_03)
+- NEX-217 PCI infra -> pen test Nov 25
 
-COMPLETED THIS SPRINT:
-1. NEX-189: PostgreSQL migration — DONE (Diana Chen). Migration ran successfully Nov 3. See email_11.
-2. NEX-231: API rate limiter (PR #47) — DONE pending final merge. Kenji's security review addressed (email_09, email_12).
-3. NEX-244: Search index hotfix (PR #52) — DONE. Performance restored after Nov 10 incident (email_08).
-4. NEX-198: Search performance optimization — IN PROGRESS. P95 now at 210ms, target is 200ms.
+RAJ: Wants daily pen-test updates Nov 25 - Dec 6. Confirms Jan 20 acceptable.
 
-NOT COMPLETED:
-1. NEX-204: Payments feature — DELAYED to Jan 20, 2025. See email_03 for full context.
-2. NEX-207: Stripe API keys setup — DONE (DevOps resolved).
-3. NEX-217: PCI-DSS infrastructure gaps — IN PROGRESS. Pen test scheduled Nov 25.
-
-DEMOS:
-- Diana demonstrated the new partitioned events table — query speed on monthly aggregations improved 40%.
-- Arjun demonstrated the /webhooks endpoint with HMAC verification.
-- Riya demonstrated the refund API endpoint with full test coverage.
-
-RAJ PATEL FEEDBACK:
-- Pleased with the database migration success.
-- Wants daily updates on the pen test progress during Nov 25 - Dec 6.
-- Confirmed January 20 is acceptable for Payments if all blockers are resolved.
-
---- ACTION ITEMS ---
-- Kenji: Daily pen test status updates to Raj — starting Nov 25
-- Arjun: Merge /webhooks PR by Nov 18
-- Riya: Drive search P95 below 200ms by end of Sprint 23
-- Diana: Post migration runbook update to confluence (ref: docs/database-migration-plan.md)
+ACTION ITEMS:
+- Kenji: daily pen-test updates from Nov 25
+- Arjun: merge /webhooks PR by Nov 18

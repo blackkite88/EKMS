@@ -1,8 +1,24 @@
 {
   "id": "email_05",
+  "access": {
+    "department": "engineering",
+    "projects": [
+      "infra"
+    ],
+    "min_clearance": 2,
+    "sensitivity": "internal"
+  },
   "from": "diana.chen@nexora.com",
-  "to": "engineering@nexora.com",
+  "to": [
+    "engineering@nexora.com"
+  ],
   "subject": "Database Migration — Approval Required",
   "date": "2024-10-21T11:00:00Z",
-  "body": "Hi all,\n\nI'm requesting formal approval for the PostgreSQL migration described in ticket NEX-189 and documented in docs/database-migration-plan.md.\n\nSummary of migration:\n- Migrating from PostgreSQL 13 to PostgreSQL 16\n- Adding partitioning to the events table (currently 180M rows)\n- Estimated downtime: 4-hour maintenance window on Sunday Nov 3 at 2 AM IST\n- Rollback plan: logical replication standby kept live for 48 hours post-migration\n\nI need approval from:\n1. Raj Patel (CTO) — infrastructure sign-off\n2. Priya Sharma (Eng Manager) — team coordination\n3. Legal/Compliance — data residency confirmation\n\nPlease reply to this email with your approval or concerns by Oct 28.\n\nDiana Chen\nDatabase Architect"
+  "body": "Hi all,\n\nRequesting formal approval for the PostgreSQL migration in NEX-189, documented in docs/database-migration-plan.md.\n\n- PostgreSQL 13 -> 16\n- Partition the events table (180M rows)\n- 4-hour maintenance window, Sunday Nov 3, 02:00 IST\n- Rollback: logical replication standby kept live post-migration\n\nApprovals needed from Raj Patel (CTO) and Priya Sharma (EM). Reply by Oct 28.\n\nDiana Chen, Database Architect",
+  "linked_tickets": [
+    "NEX-189"
+  ],
+  "linked_docs": [
+    "database-migration-plan"
+  ]
 }

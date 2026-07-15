@@ -1,0 +1,33 @@
+{
+  "id": "email_18",
+  "access": {
+    "department": "engineering",
+    "projects": [
+      "payments",
+      "infra"
+    ],
+    "min_clearance": 2,
+    "sensitivity": "internal"
+  },
+  "from": "arjun.mehta@nexora.com",
+  "to": [
+    "priya.sharma@nexora.com"
+  ],
+  "subject": "Payments — Charge & Refund Endpoints Done",
+  "date": "2024-11-15T17:30:00Z",
+  "body": "Hi Priya,\n\nCharge (NEX-212, PR #55) and refund (NEX-215, PR #53) endpoints are merged with full tests. Both write to the payment_audit_log before processing per the PCI design (NEX-219). The /webhooks endpoint (NEX-240) is in progress. Architecture is in docs/payments-architecture.md and docs/stripe-integration-guide.md.\n\nArjun",
+  "linked_tickets": [
+    "NEX-212",
+    "NEX-215",
+    "NEX-219",
+    "NEX-240"
+  ],
+  "linked_prs": [
+    "pr_55",
+    "pr_53"
+  ],
+  "linked_docs": [
+    "payments-architecture",
+    "stripe-integration-guide"
+  ]
+}

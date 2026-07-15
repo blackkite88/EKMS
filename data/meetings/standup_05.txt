@@ -1,0 +1,17 @@
+---
+access:
+  department: engineering
+  projects: [search]
+  min_clearance: 1
+  sensitivity: public
+---
+Meeting: Engineering Standup
+Date: 2024-11-14
+Attendees: Priya, Riya, Diana
+
+RIYA: Search P95 at 210ms (NEX-198). Working connection pool tuning.
+DIANA: Migration runbook updated with index verification checklist.
+PRIYA: Prepping sprint review.
+
+ACTION ITEMS:
+- Riya: pool tuning results by sprint review

@@ -1,0 +1,25 @@
+{
+  "id": "pr_48",
+  "access": {
+    "department": "engineering",
+    "projects": [
+      "search"
+    ],
+    "min_clearance": 1,
+    "sensitivity": "public"
+  },
+  "number": 48,
+  "title": "GIN index for full-text search",
+  "author": "Riya Desai",
+  "status": "merged",
+  "branch": "feature/search-gin-index",
+  "created": "2024-11-02",
+  "merged": "2024-11-03",
+  "description": "GIN index on documents.content, ~45% faster text search (NEX-198).",
+  "linked_tickets": [
+    "NEX-198"
+  ],
+  "linked_docs": [
+    "search-optimization-plan"
+  ]
+}

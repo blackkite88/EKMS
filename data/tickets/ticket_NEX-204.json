@@ -1,5 +1,14 @@
 {
   "id": "ticket_NEX-204",
+  "access": {
+    "department": "engineering",
+    "projects": [
+      "payments",
+      "infra"
+    ],
+    "min_clearance": 2,
+    "sensitivity": "internal"
+  },
   "key": "NEX-204",
   "title": "Payments Feature — Epic",
   "type": "Epic",
@@ -11,10 +20,25 @@
   "updated": "2024-11-09",
   "target_date": "2025-01-20",
   "original_target": "2024-12-15",
-  "description": "Epic tracking the full Payments feature for Nexora's Enterprise SaaS platform. Enables direct billing via Stripe payment gateway. Required for Enterprise tier upsell ($2.1M ARR impact per Q4 All Hands).\n\nDelay reason: PCI-DSS Level 1 compliance gaps discovered (see NEX-217) and API rate limiting conflict with Stripe webhooks (see NEX-231). Full context in email_03 and standup_03 meeting notes.",
-  "linked_tickets": ["NEX-207", "NEX-217", "NEX-231", "NEX-212", "NEX-215"],
-  "linked_emails": ["email_01", "email_02", "email_03"],
-  "linked_meetings": ["standup_01", "standup_03", "all_hands_q4", "architecture_review_01"],
-  "linked_prs": ["pr_45", "pr_47"],
-  "labels": ["payments", "q4", "critical-path"]
+  "description": "Epic for the Payments feature (Stripe direct billing, Enterprise tier). Delayed due to PCI-DSS gaps (NEX-217) and the rate-limiter/Stripe webhook conflict (NEX-231). Context: email_03, standup_03.",
+  "linked_tickets": [
+    "NEX-217",
+    "NEX-231",
+    "NEX-212",
+    "NEX-215",
+    "NEX-240"
+  ],
+  "linked_emails": [
+    "email_01",
+    "email_02",
+    "email_03"
+  ],
+  "linked_meetings": [
+    "standup_03",
+    "architecture_review_01"
+  ],
+  "linked_prs": [
+    "pr_45",
+    "pr_47"
+  ]
 }

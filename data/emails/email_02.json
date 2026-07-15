@@ -1,9 +1,29 @@
 {
   "id": "email_02",
+  "access": {
+    "department": "engineering",
+    "projects": [
+      "payments",
+      "infra"
+    ],
+    "min_clearance": 2,
+    "sensitivity": "internal"
+  },
   "from": "kenji.nakamura@nexora.com",
-  "to": "priya.sharma@nexora.com",
-  "cc": "engineering@nexora.com",
-  "subject": "RE: Payments Feature — PCI-DSS Compliance Blocker",
+  "to": [
+    "priya.sharma@nexora.com"
+  ],
+  "cc": [
+    "engineering@nexora.com"
+  ],
+  "subject": "RE: Payments — PCI-DSS Compliance Blocker",
   "date": "2024-11-08T14:32:00Z",
-  "body": "Hi Priya,\n\nFollowing up on the compliance audit I started this week. Unfortunately I've identified a critical blocker: our current infrastructure does not meet PCI-DSS Level 1 requirements for cardholder data environments.\n\nSpecifically:\n1. We are missing network segmentation between the payments service and the general application layer.\n2. The audit logging for card transactions is not yet implemented.\n3. We need a third-party penetration test before certification.\n\nThe pen test alone has a 3–4 week lead time. This means the December 15 date is no longer achievable.\n\nI've raised this in ticket NEX-217 and I'd recommend we discuss timeline adjustments in this week's engineering standup — see the meeting notes from standup_03 for context on what was already discussed.\n\nI'm targeting mid-January at the earliest for a compliant release.\n\nRegards,\nKenji Nakamura\nSecurity Engineer, Nexora Inc."
+  "body": "Hi Priya,\n\nMy PCI-DSS audit found a critical blocker: our infrastructure does not meet PCI-DSS Level 1 for cardholder data.\n\nGaps:\n1. No network segmentation between payments and the general app layer.\n2. Card transaction audit logging not implemented.\n3. A third-party penetration test is required before certification.\n\nThe pen test alone has a 3-4 week lead time. December 15 is no longer achievable. I raised this in NEX-217 and we discussed it in standup_03. Targeting mid-January at the earliest.\n\nKenji Nakamura, Security Lead",
+  "linked_tickets": [
+    "NEX-217",
+    "NEX-204"
+  ],
+  "linked_meetings": [
+    "standup_03"
+  ]
 }

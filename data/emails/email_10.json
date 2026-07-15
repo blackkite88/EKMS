@@ -1,8 +1,31 @@
 {
   "id": "email_10",
-  "from": "raj.patel@nexora.com",
-  "to": "all@nexora.com",
-  "subject": "Q4 Engineering Priorities — All Hands Recap",
-  "date": "2024-11-01T17:00:00Z",
-  "body": "Team,\n\nThank you for attending today's All Hands. Here is a recap of Q4 engineering priorities:\n\n1. Payments Feature (NEX-204): Our flagship Q4 deliverable. Target December 15. Priya's team is leading.\n2. Database Migration (NEX-189): Scheduled for November 3 maintenance window. Diana is coordinating.\n3. Search Performance (NEX-198): Ongoing optimization work. Target: P95 query latency < 200ms.\n4. API Rate Limiting (NEX-231): Security hardening initiative. Required for Payments go-live.\n5. Mobile SDK v2 (NEX-210): Parallel track, led by the mobile team.\n\nRemember: Payments is our highest priority. Any blockers on that track should be escalated immediately.\n\nRaj Patel\nCTO, Nexora Inc."
+  "access": {
+    "department": "engineering",
+    "projects": [
+      "payments",
+      "infra"
+    ],
+    "min_clearance": 2,
+    "sensitivity": "internal"
+  },
+  "from": "priya.sharma@nexora.com",
+  "to": [
+    "arjun.mehta@nexora.com"
+  ],
+  "subject": "Decision: Rate Limiter Approach for Stripe Webhooks",
+  "date": "2024-11-10T09:00:00Z",
+  "body": "Hi Arjun,\n\nApproving Option 2: a dedicated /webhooks endpoint with HMAC verification, bypassing the IP limiter. It is more secure than IP whitelisting and Stripe IPs change. Also fix Kenji's X-Forwarded-For and Retry-After points in PR #47 (email_09) before merge.\n\nThis unblocks NEX-231 and the Payments sprint.\n\nPriya",
+  "linked_tickets": [
+    "NEX-231",
+    "NEX-240",
+    "NEX-233"
+  ],
+  "linked_emails": [
+    "email_04",
+    "email_09"
+  ],
+  "linked_prs": [
+    "pr_47"
+  ]
 }

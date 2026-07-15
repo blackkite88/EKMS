@@ -1,36 +1,15 @@
-Meeting: Incident Review — Search Performance Degradation (Nov 10)
+---
+access:
+  department: engineering
+  projects: [payments, infra]
+  min_clearance: 2
+  sensitivity: internal
+---
+Meeting: Incident Review — Search Degradation (Nov 10)
 Date: 2024-11-13
-Attendees: Priya Sharma, Riya Desai, Diana Chen, Kenji Nakamura
-Facilitator: Riya Desai
+Attendees: Priya, Riya, Diana, Kenji
 
---- INCIDENT REVIEW NOTES ---
-
-INCIDENT SUMMARY:
-On November 10, 2024, Nexora experienced search query timeouts affecting approximately 35% of users for a period of 1.5 hours. Full timeline in email_08.
-
-ROOT CAUSE ANALYSIS:
-The PostgreSQL migration (NEX-189) that ran on November 3 was successful, but the post-migration cleanup script had a bug: the index recreation step for documents.created_at silently failed due to a lock timeout error that was caught and swallowed. The index was never recreated, causing full table scans on the documents table (180M rows).
-
-The issue went undetected for 7 days because:
-1. We had no automated monitoring for missing indexes.
-2. The documents table was under low query load in the days immediately after migration.
-3. The error in the migration script was logged to a file that nobody was watching.
-
-HOTFIX:
-PR #52 applied on Nov 10 at 15:45 IST. Created the index concurrently to avoid downtime. Performance restored within 10 minutes of index build completing.
-
-PREVENTIVE MEASURES (from email_08 action items):
-1. Diana Chen: Add index verification step to migration runbook by Nov 19.
-2. Kenji Nakamura: Add automated index health checks to monitoring pipeline by Nov 22.
-3. Arjun Mehta: Review all migration scripts for similar silent failure patterns by Nov 20.
-
-BLAMELESS CULTURE NOTE:
-This was a process gap, not individual negligence. The migration runbook did not include post-migration verification steps. We are fixing the process.
-
-LESSONS LEARNED:
-- Never catch and swallow errors in migration scripts.
-- Always add post-migration verification steps for critical database objects.
-- Index health should be part of standard monitoring.
-
-Referenced docs: docs/incident-postmortem-nov10.md, docs/database-migration-plan.md
-Referenced PRs: PR #52 (hotfix), PR #50 (migration scripts)
+ROOT CAUSE: The Nov 3 migration (NEX-189) post-cleanup script caught and swallowed a lock-timeout error, so the documents.created_at index was never recreated. Undetected 7 days -> full table scans on 180M rows -> timeouts.
+HOTFIX: PR #52 created the index concurrently.
+PREVENTIVE (email_08): runbook index verification (Diana, Nov 19); automated index health checks (Kenji, Nov 22).
+LESSON: never swallow errors in migration scripts. Docs: docs/incident-postmortem-nov10.md.

@@ -1,7 +1,16 @@
 {
   "id": "ticket_NEX-217",
+  "access": {
+    "department": "engineering",
+    "projects": [
+      "payments",
+      "infra"
+    ],
+    "min_clearance": 2,
+    "sensitivity": "internal"
+  },
   "key": "NEX-217",
-  "title": "PCI-DSS Level 1 Compliance — Infrastructure Gaps",
+  "title": "PCI-DSS Level 1 — Infrastructure Gaps",
   "type": "Task",
   "status": "In Progress",
   "priority": "Critical",
@@ -9,9 +18,20 @@
   "reporter": "Kenji Nakamura",
   "created": "2024-11-08",
   "updated": "2024-11-12",
-  "description": "Three critical PCI-DSS Level 1 gaps identified during compliance audit for the Payments feature (NEX-204):\n\n1. Network segmentation: Payments service must be in a dedicated VPC subnet isolated from general application layer. Work tracked in NEX-218.\n2. Audit logging: Card transaction audit logging not yet implemented. Tracked in NEX-219.\n3. Penetration test: Third-party pen test required before certification. Vendor contracted, scheduled Nov 25 - Dec 6. Tracked in NEX-220.\n\nBlocker for NEX-204. See email_02 for full findings and standup_03 for team discussion.",
-  "linked_tickets": ["NEX-204", "NEX-218", "NEX-219", "NEX-220"],
-  "linked_emails": ["email_02", "email_03"],
-  "linked_meetings": ["standup_03"],
-  "labels": ["security", "pci-dss", "compliance", "blocker"]
+  "description": "Three PCI-DSS Level 1 gaps for Payments (NEX-204): network segmentation (NEX-218), audit logging (NEX-219), pen test (NEX-220). Blocker for NEX-204. See email_02, standup_03.",
+  "linked_tickets": [
+    "NEX-204",
+    "NEX-218",
+    "NEX-219",
+    "NEX-220"
+  ],
+  "linked_emails": [
+    "email_02"
+  ],
+  "linked_meetings": [
+    "standup_03"
+  ],
+  "linked_docs": [
+    "pci-dss-compliance"
+  ]
 }

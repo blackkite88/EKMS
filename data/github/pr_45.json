@@ -1,36 +1,30 @@
 {
   "id": "pr_45",
+  "access": {
+    "department": "engineering",
+    "projects": [
+      "payments",
+      "infra"
+    ],
+    "min_clearance": 2,
+    "sensitivity": "internal"
+  },
   "number": 45,
-  "title": "feat: Payments microservice scaffold",
-  "branch": "feature/payments-service-scaffold",
-  "base": "main",
-  "author": "arjun.mehta",
+  "title": "Payments service scaffold",
+  "author": "Arjun Mehta",
   "status": "merged",
+  "branch": "feature/payments-service",
   "created": "2024-11-05",
-  "merged": "2024-11-09",
-  "reviewers": ["riya.desai", "priya.sharma"],
-  "description": "Initial scaffold for the Payments microservice. Sets up:\n- Service directory structure\n- Express app with payments-specific middleware\n- Database connection to the payments PostgreSQL schema\n- Stub endpoints for /payments/charge, /payments/refund, /webhooks/stripe\n- Docker configuration for isolated VPC deployment (NEX-218)\n- Environment configuration for Stripe API keys (from AWS Secrets Manager, NEX-207)\n\nArchitecture decisions from architecture_review_01 are reflected here: dedicated schema, audit log table stub (NEX-219), network isolation assumptions.\n\nRelated: NEX-204, architecture_review_01, email_01",
-  "files_changed": [
-    "services/payments/src/app.js",
-    "services/payments/src/routes/charge.js",
-    "services/payments/src/routes/refund.js",
-    "services/payments/src/routes/webhooks.js",
-    "services/payments/src/db/connection.js",
-    "services/payments/Dockerfile",
-    "services/payments/package.json"
+  "merged": "2024-11-06",
+  "description": "Scaffolds the Payments microservice per architecture_review_01. VPC subnet topology (NEX-218). Related: NEX-204, docs/payments-architecture.md.",
+  "linked_tickets": [
+    "NEX-204",
+    "NEX-218"
   ],
-  "review_comments": [
-    {
-      "author": "riya.desai",
-      "comment": "Clean scaffold. The payments schema isolation looks good. One suggestion: add a health check endpoint for k8s liveness probes.",
-      "date": "2024-11-08"
-    },
-    {
-      "author": "arjun.mehta",
-      "comment": "Good call — added /health endpoint in latest commit.",
-      "date": "2024-11-08"
-    }
+  "linked_meetings": [
+    "architecture_review_01"
   ],
-  "linked_tickets": ["NEX-204", "NEX-218", "NEX-219"],
-  "linked_meetings": ["architecture_review_01"]
+  "linked_docs": [
+    "payments-architecture"
+  ]
 }

@@ -1,0 +1,50 @@
+services:
+  neo4j:
+    image: neo4j:5
+    container_name: nexora-neo4j
+    ports:
+      - "7474:7474" # HTTP browser
+      - "7687:7687" # Bolt protocol
+    environment:
+      NEO4J_AUTH: neo4j/nexorapass
+      NEO4J_PLUGINS: '["apoc"]'
+      NEO4J_dbms_security_procedures_unrestricted: apoc.*
+    volumes:
+      - nexora_neo4j_data:/data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:7474"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  postgres:
+    image: postgres:16
+    container_name: nexora-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: nexora
+      POSTGRES_PASSWORD: nexorapass
+      POSTGRES_DB: nexora
+    volumes:
+      - nexora_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nexora"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  chroma:
+    image: chromadb/chroma:latest
+    container_name: nexora-chroma
+    ports:
+      - "8000:8000"
+    volumes:
+      - nexora_chroma_data:/chroma/chroma
+    # Chroma's slim image has neither wget nor curl; rely on the app's own
+    # /health check for readiness instead of a container healthcheck.
+
+volumes:
+  nexora_neo4j_data:
+  nexora_pg_data:
+  nexora_chroma_data:

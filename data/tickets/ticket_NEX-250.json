@@ -1,0 +1,33 @@
+{
+  "id": "ticket_NEX-250",
+  "access": {
+    "department": "engineering",
+    "projects": [
+      "infra"
+    ],
+    "min_clearance": 2,
+    "sensitivity": "internal"
+  },
+  "key": "NEX-250",
+  "title": "Add Automated Index Health Checks",
+  "type": "Task",
+  "status": "In Progress",
+  "priority": "High",
+  "assignee": "Kenji Nakamura",
+  "reporter": "Riya Desai",
+  "created": "2024-11-12",
+  "updated": "2024-11-14",
+  "description": "Automated monitoring for missing/invalid indexes, from the Nov 10 post-mortem (email_08, NEX-244). Due Nov 22.",
+  "linked_tickets": [
+    "NEX-244"
+  ],
+  "linked_emails": [
+    "email_08"
+  ],
+  "linked_meetings": [
+    "incident_review_01"
+  ],
+  "linked_docs": [
+    "incident-postmortem-nov10"
+  ]
+}

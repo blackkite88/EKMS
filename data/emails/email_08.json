@@ -1,8 +1,30 @@
 {
   "id": "email_08",
+  "access": {
+    "department": "engineering",
+    "projects": [
+      "payments",
+      "infra"
+    ],
+    "min_clearance": 2,
+    "sensitivity": "internal"
+  },
   "from": "riya.desai@nexora.com",
-  "to": "engineering@nexora.com",
-  "subject": "Search Performance Degradation — Incident Post-Mortem",
+  "to": [
+    "engineering@nexora.com"
+  ],
+  "subject": "Search Performance Incident — Post-Mortem",
   "date": "2024-11-12T13:00:00Z",
-  "body": "Hi team,\n\nPosting the post-mortem for the search performance degradation incident that occurred November 10, 2024.\n\nTimeline:\n- 14:30 IST: Users report search queries timing out\n- 14:45 IST: On-call (Riya Desai) alerted via PagerDuty\n- 15:10 IST: Root cause identified — missing index on the documents.created_at column\n- 15:45 IST: Hotfix applied (ticket NEX-244), index created online, performance restored\n- 16:00 IST: All clear\n\nRoot cause: The database migration on Nov 3 (NEX-189) ran successfully, but the post-migration index rebuild script had an error that caused the created_at index to be dropped and not recreated. See PR #52 for the hotfix.\n\nAction items:\n1. Add index verification step to migration runbook — Diana Chen — by Nov 19\n2. Add automated index health checks to monitoring pipeline — Kenji Nakamura — by Nov 22\n3. Review all migration scripts for similar omissions — Arjun Mehta — by Nov 20\n\nFull post-mortem doc: docs/incident-postmortem-nov10.md\n\nRiya Desai\nSoftware Engineer"
+  "body": "Hi team,\n\nPost-mortem for the Nov 10 search degradation.\n\nTimeline:\n- 14:30 users report search timeouts\n- 14:45 on-call (me) alerted\n- 15:10 root cause: missing index on documents.created_at\n- 15:45 hotfix applied (NEX-244), index rebuilt, restored\n\nRoot cause: the Nov 3 migration (NEX-189) post-migration script silently dropped and failed to recreate the created_at index. See PR #52. Full write-up in docs/incident-postmortem-nov10.md.\n\nAction items:\n1. Index verification step in runbook — Diana — Nov 19\n2. Automated index health checks — Kenji — Nov 22\n\nRiya Desai",
+  "linked_tickets": [
+    "NEX-244",
+    "NEX-189"
+  ],
+  "linked_prs": [
+    "pr_52"
+  ],
+  "linked_docs": [
+    "incident-postmortem-nov10",
+    "database-migration-plan"
+  ]
 }

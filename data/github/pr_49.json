@@ -1,0 +1,26 @@
+{
+  "id": "pr_49",
+  "access": {
+    "department": "engineering",
+    "projects": [
+      "search"
+    ],
+    "min_clearance": 1,
+    "sensitivity": "public"
+  },
+  "number": 49,
+  "title": "Query result caching (Redis, 60s TTL)",
+  "author": "Riya Desai",
+  "status": "merged",
+  "branch": "feature/search-cache",
+  "created": "2024-11-04",
+  "merged": "2024-11-05",
+  "description": "Redis cache for search results (NEX-208, NEX-198).",
+  "linked_tickets": [
+    "NEX-208",
+    "NEX-198"
+  ],
+  "linked_docs": [
+    "search-optimization-plan"
+  ]
+}

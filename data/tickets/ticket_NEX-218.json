@@ -1,7 +1,15 @@
 {
   "id": "ticket_NEX-218",
+  "access": {
+    "department": "engineering",
+    "projects": [
+      "payments"
+    ],
+    "min_clearance": 4,
+    "sensitivity": "confidential"
+  },
   "key": "NEX-218",
-  "title": "PCI-DSS: Network Segmentation — Payments VPC Subnet",
+  "title": "PCI-DSS: Network Segmentation — Payments VPC",
   "type": "Task",
   "status": "In Progress",
   "priority": "Critical",
@@ -9,9 +17,16 @@
   "reporter": "Kenji Nakamura",
   "created": "2024-11-08",
   "updated": "2024-11-12",
-  "description": "Create a dedicated VPC subnet for the Payments service, isolated from the general application layer. Required for PCI-DSS Level 1 compliance (NEX-217).\n\nDesign: Payments service will run in subnet 10.0.4.0/24 with strict security group rules. Only HTTPS ingress from the main application layer and egress to Stripe IPs allowed. No direct internet access.\n\nDecision from architecture_review_01: Payments VPC design agreed upon. Arjun's microservice scaffold (PR #45) assumes this network topology.\n\nTarget: Complete by Nov 22 to align with pen test preparation.",
-  "linked_tickets": ["NEX-217", "NEX-204"],
-  "linked_meetings": ["architecture_review_01"],
-  "linked_docs": ["payments-architecture"],
-  "labels": ["security", "pci-dss", "infrastructure", "networking"]
+  "description": "Dedicated VPC subnet 10.0.4.0/24 for payments, isolated from the app layer (PCI-DSS, NEX-217). Design agreed in architecture_review_01.",
+  "linked_tickets": [
+    "NEX-217",
+    "NEX-204"
+  ],
+  "linked_meetings": [
+    "architecture_review_01"
+  ],
+  "linked_docs": [
+    "payments-architecture",
+    "pci-dss-compliance"
+  ]
 }

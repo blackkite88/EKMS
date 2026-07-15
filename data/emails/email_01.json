@@ -1,8 +1,25 @@
 {
   "id": "email_01",
+  "access": {
+    "department": "engineering",
+    "projects": [
+      "payments",
+      "infra"
+    ],
+    "min_clearance": 2,
+    "sensitivity": "internal"
+  },
   "from": "priya.sharma@nexora.com",
-  "to": "engineering@nexora.com",
-  "subject": "Payments Feature — Sprint Planning Kickoff",
+  "to": [
+    "engineering@nexora.com"
+  ],
+  "subject": "Payments Feature — Sprint Kickoff",
   "date": "2024-11-04T09:15:00Z",
-  "body": "Hi team,\n\nI wanted to kick off the sprint planning discussion for our upcoming Payments feature rollout. As per the Q4 roadmap, we are targeting a release date of December 15, 2024.\n\nKey deliverables this sprint:\n- Payment gateway integration (Stripe) — assigned to Arjun Mehta\n- PCI-DSS compliance audit — assigned to Kenji Nakamura\n- Backend API for charge/refund endpoints — assigned to Riya Desai\n- Frontend checkout UI — to be coordinated with the product team\n\nPlease review ticket NEX-204 which tracks the overall Payments epic. The PCI-DSS compliance requirement is a blocker for go-live, so Kenji please flag any blockers as soon as possible.\n\nI'll schedule the kickoff call for tomorrow at 10 AM IST.\n\nBest,\nPriya Sharma\nEngineering Manager, Nexora Inc."
+  "body": "Hi team,\n\nKicking off the Payments feature sprint. Per the Q4 roadmap we are targeting a December 15, 2024 release.\n\nDeliverables:\n- Stripe payment gateway integration — Arjun Mehta\n- PCI-DSS compliance audit — Kenji Nakamura\n- Charge/refund backend API — Riya Desai\n\nPlease review ticket NEX-204 (Payments epic). The PCI-DSS requirement is a go-live blocker, so Kenji flag issues early.\n\nBest,\nPriya Sharma, Engineering Manager",
+  "linked_tickets": [
+    "NEX-204"
+  ],
+  "linked_meetings": [
+    "standup_01"
+  ]
 }

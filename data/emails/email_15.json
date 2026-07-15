@@ -1,0 +1,34 @@
+{
+  "id": "email_15",
+  "access": {
+    "department": "security",
+    "projects": [
+      "security"
+    ],
+    "min_clearance": 5,
+    "sensitivity": "restricted"
+  },
+  "from": "kenji.nakamura@nexora.com",
+  "to": [
+    "security@nexora.com"
+  ],
+  "subject": "[RESTRICTED] INC-001 Forensic Timeline",
+  "date": "2024-12-03T18:30:00Z",
+  "body": "Team,\n\nRESTRICTED. INC-001 (NEX-260) forensic timeline:\n- Dec 2 21:10 — first forged webhook call accepted (missing HMAC check, NEX-240)\n- 21:12-22:40 — attacker enumerated payment metadata via replayed webhook events\n- 22:40 — WAF anomaly alert, endpoint disabled\n- 23:05 — HMAC verification hotfix deployed (PR #61)\n\nExposure: internal customer IDs, transaction amounts. No card data (Stripe tokenization). Entry vector traces to the rate-limiter webhook gap first raised in NEX-231 and email_04, and to the review comments in email_09 that were not fully addressed before rollout. Full write-up: docs/security-incident-postmortem.md.\n\nKenji",
+  "linked_tickets": [
+    "NEX-260",
+    "NEX-240",
+    "NEX-231"
+  ],
+  "linked_emails": [
+    "email_13",
+    "email_09",
+    "email_04"
+  ],
+  "linked_prs": [
+    "pr_61"
+  ],
+  "linked_docs": [
+    "security-incident-postmortem"
+  ]
+}

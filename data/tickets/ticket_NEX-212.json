@@ -1,7 +1,16 @@
 {
   "id": "ticket_NEX-212",
+  "access": {
+    "department": "engineering",
+    "projects": [
+      "payments",
+      "infra"
+    ],
+    "min_clearance": 2,
+    "sensitivity": "internal"
+  },
   "key": "NEX-212",
-  "title": "Payments — Stripe Charge Endpoint Implementation",
+  "title": "Payments — Stripe Charge Endpoint",
   "type": "Story",
   "status": "Done",
   "priority": "High",
@@ -9,8 +18,15 @@
   "reporter": "Priya Sharma",
   "created": "2024-11-04",
   "updated": "2024-11-15",
-  "description": "Implement the POST /payments/charge API endpoint. Uses Stripe PaymentIntents API.\n\nAcceptance criteria:\n- Accepts amount, currency, payment_method_id, customer_id\n- Creates Stripe PaymentIntent and confirms it\n- Writes event to payment_audit_log (NEX-219) before returning\n- Returns payment_intent_id, status, amount\n- Handles Stripe errors: card_declined, insufficient_funds, authentication_required\n\nPR #55 submitted and merged. Full integration tests included.",
-  "linked_tickets": ["NEX-204", "NEX-219"],
-  "linked_prs": ["pr_55"],
-  "labels": ["payments", "stripe", "api"]
+  "description": "POST /payments/charge via Stripe PaymentIntents. Writes to payment_audit_log (NEX-219). PR #55.",
+  "linked_tickets": [
+    "NEX-204",
+    "NEX-219"
+  ],
+  "linked_emails": [
+    "email_18"
+  ],
+  "linked_prs": [
+    "pr_55"
+  ]
 }

@@ -1,0 +1,30 @@
+{
+  "id": "pr_61",
+  "access": {
+    "department": "security",
+    "projects": [
+      "security"
+    ],
+    "min_clearance": 5,
+    "sensitivity": "restricted"
+  },
+  "number": 61,
+  "title": "[RESTRICTED] Enforce HMAC + replay protection on webhooks",
+  "author": "Arjun Mehta",
+  "status": "merged",
+  "branch": "hotfix/webhook-hmac-enforce",
+  "created": "2024-12-02",
+  "merged": "2024-12-03",
+  "description": "RESTRICTED. P0 remediation for INC-001 (NEX-260, NEX-261): enforce Stripe HMAC verification on all webhook calls, add nonce/replay protection and security regression tests. Closes the entry vector from NEX-240/NEX-231.",
+  "linked_tickets": [
+    "NEX-261",
+    "NEX-260",
+    "NEX-240"
+  ],
+  "linked_emails": [
+    "email_15"
+  ],
+  "linked_docs": [
+    "security-incident-postmortem"
+  ]
+}

@@ -1,5 +1,13 @@
 {
   "id": "ticket_NEX-210",
+  "access": {
+    "department": "engineering",
+    "projects": [
+      "search"
+    ],
+    "min_clearance": 1,
+    "sensitivity": "public"
+  },
   "key": "NEX-210",
   "title": "Mobile SDK v2 — Offline Support",
   "type": "Epic",
@@ -9,8 +17,11 @@
   "reporter": "Raj Patel",
   "created": "2024-10-15",
   "updated": "2024-11-01",
-  "description": "Build the next major version of Nexora's mobile SDK with offline-first architecture. Data sync via background jobs when connectivity restored.\n\nThis is a parallel track to Payments (NEX-204) and does not share engineering resources. Mobile team is autonomous on this initiative.\n\nMentioned in email_10 Q4 all hands recap and all_hands_q4 meeting notes as a Q4 priority.",
-  "linked_emails": ["email_10"],
-  "linked_meetings": ["all_hands_q4"],
-  "labels": ["mobile", "sdk", "q4", "offline"]
+  "description": "Next-gen mobile SDK with offline-first sync. Parallel track (email_12, all_hands_q4).",
+  "linked_emails": [
+    "email_12"
+  ],
+  "linked_meetings": [
+    "all_hands_q4"
+  ]
 }

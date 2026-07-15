@@ -1,7 +1,15 @@
 {
   "id": "ticket_NEX-198",
+  "access": {
+    "department": "engineering",
+    "projects": [
+      "search"
+    ],
+    "min_clearance": 1,
+    "sensitivity": "public"
+  },
   "key": "NEX-198",
-  "title": "Search Performance Optimization — P95 Latency < 200ms",
+  "title": "Search Performance — P95 < 200ms",
   "type": "Task",
   "status": "In Progress",
   "priority": "High",
@@ -9,11 +17,19 @@
   "reporter": "Raj Patel",
   "created": "2024-10-12",
   "updated": "2024-11-15",
-  "description": "Customer-facing search performance improvement initiative. Current state: P95 latency 210ms (improved from 380ms baseline). Target: P95 < 200ms.\n\nCompleted optimizations:\n1. Added GIN index on documents.content for full-text search (PR #48)\n2. Implemented query result caching with 60s TTL (PR #49)\n3. Rebuilt documents.created_at index after NEX-244 incident (PR #52)\n\nRemaining work: Connection pool tuning, query plan analysis for edge case queries.\n\nSee docs/search-optimization-plan.md for detailed approach.",
-  "linked_tickets": ["NEX-244"],
-  "linked_emails": ["email_08", "email_10"],
-  "linked_meetings": ["all_hands_q4", "sprint_review_01"],
-  "linked_prs": ["pr_48", "pr_49", "pr_52"],
-  "linked_docs": ["search-optimization-plan"],
-  "labels": ["performance", "search", "q4"]
+  "description": "Reduce search P95 from 380ms to <200ms (now 210ms). GIN index (PR #48), caching (PR #49), created_at rebuild (PR #52). Plan: docs/search-optimization-plan.md.",
+  "linked_tickets": [
+    "NEX-244"
+  ],
+  "linked_emails": [
+    "email_16"
+  ],
+  "linked_prs": [
+    "pr_48",
+    "pr_49",
+    "pr_52"
+  ],
+  "linked_docs": [
+    "search-optimization-plan"
+  ]
 }

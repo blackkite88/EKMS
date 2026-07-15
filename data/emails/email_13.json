@@ -1,0 +1,29 @@
+{
+  "id": "email_13",
+  "access": {
+    "department": "security",
+    "projects": [
+      "security"
+    ],
+    "min_clearance": 5,
+    "sensitivity": "restricted"
+  },
+  "from": "kenji.nakamura@nexora.com",
+  "to": [
+    "raj.patel@nexora.com"
+  ],
+  "cc": [
+    "security@nexora.com"
+  ],
+  "subject": "[RESTRICTED] Security Incident — Unauthorized Access Detected",
+  "date": "2024-12-02T22:40:00Z",
+  "body": "Raj,\n\nRESTRICTED — do not forward.\n\nAt 21:10 IST our WAF flagged anomalous traffic against the payments service. Investigation confirms an attacker exploited the very rate-limiter webhook gap discussed in NEX-231 / email_04: the /webhooks endpoint (NEX-240) shipped before HMAC verification was fully enforced, allowing forged webhook calls that leaked internal payment metadata for ~90 minutes.\n\nNo cardholder data was exposed (Stripe tokenization held), but internal customer IDs and transaction amounts were accessed. This is a reportable incident. Tracking as INC-001 (NEX-260).\n\nConvening the incident response bridge now. Kenji",
+  "linked_tickets": [
+    "NEX-260",
+    "NEX-240",
+    "NEX-231"
+  ],
+  "linked_emails": [
+    "email_04"
+  ]
+}

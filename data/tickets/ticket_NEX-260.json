@@ -1,0 +1,41 @@
+{
+  "id": "ticket_NEX-260",
+  "access": {
+    "department": "security",
+    "projects": [
+      "security"
+    ],
+    "min_clearance": 5,
+    "sensitivity": "restricted"
+  },
+  "key": "NEX-260",
+  "title": "[RESTRICTED] INC-001 — Unauthorized Payment Metadata Access",
+  "type": "Incident",
+  "status": "Resolved",
+  "priority": "Critical",
+  "assignee": "Kenji Nakamura",
+  "reporter": "Kenji Nakamura",
+  "created": "2024-12-02",
+  "updated": "2024-12-08",
+  "description": "RESTRICTED. Security incident INC-001. Attacker forged webhook calls to /webhooks (NEX-240) before HMAC verification was enforced, accessing internal customer IDs and transaction amounts for ~90 min. No cardholder data (Stripe tokenization). Entry vector = the rate-limiter webhook gap (NEX-231, email_04). Remediated by PR #61. Post-mortem: docs/security-incident-postmortem.md.",
+  "linked_tickets": [
+    "NEX-240",
+    "NEX-231",
+    "NEX-261"
+  ],
+  "linked_emails": [
+    "email_13",
+    "email_14",
+    "email_15"
+  ],
+  "linked_meetings": [
+    "incident_bridge_01",
+    "security_postmortem_01"
+  ],
+  "linked_prs": [
+    "pr_61"
+  ],
+  "linked_docs": [
+    "security-incident-postmortem"
+  ]
+}

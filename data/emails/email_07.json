@@ -1,8 +1,27 @@
 {
   "id": "email_07",
+  "access": {
+    "department": "engineering",
+    "projects": [
+      "infra"
+    ],
+    "min_clearance": 2,
+    "sensitivity": "internal"
+  },
   "from": "priya.sharma@nexora.com",
-  "to": "diana.chen@nexora.com",
+  "to": [
+    "diana.chen@nexora.com"
+  ],
   "subject": "RE: Database Migration — Team Coordination Approved",
   "date": "2024-10-24T08:15:00Z",
-  "body": "Hi Diana,\n\nConfirming my approval for the database migration on November 3. I've set up the on-call rota — Arjun Mehta will be primary on-call, Riya Desai as backup.\n\nI've also sent the maintenance notification to all@nexora.com as Raj requested.\n\nPlease make sure the migration runbook in docs/database-migration-plan.md is updated with the 72-hour rollback window change Raj specified.\n\nGood luck on Sunday!\n\nPriya"
+  "body": "Hi Diana,\n\nApproved from the EM side. On-call rota: Arjun primary, Riya backup. I sent the maintenance notice to all@nexora.com per Raj.\n\nPlease update the runbook (docs/database-migration-plan.md) with the 72-hour rollback window Raj specified.\n\nPriya",
+  "linked_tickets": [
+    "NEX-189"
+  ],
+  "linked_emails": [
+    "email_06"
+  ],
+  "linked_docs": [
+    "database-migration-plan"
+  ]
 }

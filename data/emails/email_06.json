@@ -1,9 +1,30 @@
 {
   "id": "email_06",
+  "access": {
+    "department": "engineering",
+    "projects": [
+      "infra"
+    ],
+    "min_clearance": 2,
+    "sensitivity": "internal"
+  },
   "from": "raj.patel@nexora.com",
-  "to": "diana.chen@nexora.com",
-  "cc": "priya.sharma@nexora.com",
+  "to": [
+    "diana.chen@nexora.com"
+  ],
+  "cc": [
+    "priya.sharma@nexora.com"
+  ],
   "subject": "RE: Database Migration — Approved",
   "date": "2024-10-23T09:30:00Z",
-  "body": "Hi Diana,\n\nI've reviewed the migration plan (docs/database-migration-plan.md) and the associated ticket NEX-189. I'm approving this migration from my side as CTO.\n\nA few conditions:\n1. The logical replication standby MUST remain active for a minimum of 72 hours (not 48) post-migration to give us adequate rollback time.\n2. Confirm that the on-call engineer is briefed and available for the full 4-hour window.\n3. Send a company-wide maintenance notification at least 48 hours before the window.\n\nPriya, please coordinate the on-call rota. Legal has confirmed data residency compliance separately.\n\nGreen light for November 3.\n\nRaj Patel\nCTO, Nexora Inc."
+  "body": "Hi Diana,\n\nReviewed docs/database-migration-plan.md and NEX-189. Approved from my side as CTO, with conditions:\n1. Keep the logical replication standby live for 72 hours (not 48).\n2. Confirm on-call is briefed for the full window.\n3. Company-wide maintenance notice 48h ahead.\n\nGreen light for November 3.\n\nRaj Patel, CTO",
+  "linked_tickets": [
+    "NEX-189"
+  ],
+  "linked_emails": [
+    "email_05"
+  ],
+  "linked_docs": [
+    "database-migration-plan"
+  ]
 }

@@ -1,8 +1,28 @@
 {
   "id": "email_11",
+  "access": {
+    "department": "engineering",
+    "projects": [
+      "infra"
+    ],
+    "min_clearance": 2,
+    "sensitivity": "internal"
+  },
   "from": "diana.chen@nexora.com",
-  "to": "engineering@nexora.com",
+  "to": [
+    "engineering@nexora.com"
+  ],
   "subject": "Database Migration — Post-Migration Report",
   "date": "2024-11-04T06:00:00Z",
-  "body": "Hi team,\n\nHappy to report that the PostgreSQL migration (NEX-189) completed successfully overnight.\n\nMigration summary:\n- Start: Nov 3, 02:05 IST\n- End: Nov 3, 05:48 IST (3h 43m — under the 4h window)\n- PostgreSQL upgraded from 13.12 to 16.1\n- Events table partitioned by month — query performance improved ~40%\n- Logical replication standby active, will remain live until Nov 6 (72 hours)\n- Zero data loss confirmed via row count verification\n\nKnown issues:\n- Post-migration index rebuild script had a warning on the documents.created_at column. I've opened ticket NEX-244 to investigate — see email_08 for the incident that followed.\n\nOverall: migration successful. Thanks to Arjun (on-call primary) and Riya (backup) for being available throughout.\n\nDiana"
+  "body": "Hi team,\n\nThe PostgreSQL migration (NEX-189) completed overnight.\n\n- Start 02:05, end 05:48 IST (under the 4h window)\n- PG 13.12 -> 16.1, events table partitioned, ~40% query improvement\n- Standby live until Nov 6 (72h); zero data loss verified\n\nKnown issue: the post-migration index rebuild warned on documents.created_at. Opened NEX-244 — see email_08 for the incident that followed.\n\nThanks Arjun (primary on-call) and Riya (backup).\n\nDiana",
+  "linked_tickets": [
+    "NEX-189",
+    "NEX-244"
+  ],
+  "linked_emails": [
+    "email_08"
+  ],
+  "linked_docs": [
+    "database-migration-plan"
+  ]
 }

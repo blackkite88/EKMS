@@ -1,25 +1,21 @@
+// GET /sources → document counts per source type. Public-ish (optional auth):
+// counts don't reveal content, so this is safe for any authenticated user.
 import { Router } from 'express';
-import { scanDataFiles, getSourceType } from '../utils/fileScanner.js';
+import { optionalAuth } from '../auth/middleware.js';
+import { scanDataFiles, getSourceType } from '../ingestion/scanner.js';
 
 const router = Router();
 
-router.get('/', async (req, res, next) => {
+router.get('/', optionalAuth, async (_req, res, next) => {
   try {
     const files = await scanDataFiles();
-
     const counts = { emails: 0, meetings: 0, tickets: 0, docs: 0, github: 0, other: 0 };
-
     for (const file of files) {
-      const sourceType = getSourceType(file);
-      if (counts[sourceType] !== undefined) {
-        counts[sourceType]++;
-      } else {
-        counts.other++;
-      }
+      const type = getSourceType(file);
+      if (counts[type] !== undefined) counts[type]++;
+      else counts.other++;
     }
-
-    const total = Object.values(counts).reduce((sum, v) => sum + v, 0);
-
+    const total = Object.values(counts).reduce((a, b) => a + b, 0);
     res.json({ ...counts, total });
   } catch (err) {
     next(err);

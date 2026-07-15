@@ -1,0 +1,13 @@
+---
+access:
+  department: executive
+  projects: [security]
+  min_clearance: 5
+  sensitivity: restricted
+---
+Meeting: [RESTRICTED] Board Security Brief
+Date: 2024-12-10
+Attendees: Raj Patel (CTO), Board Members
+
+RESTRICTED — EXECUTIVE ONLY.
+RAJ: Briefed the board on INC-001 (NEX-260). Internal customer metadata exposed ~90 min via forged webhooks; no cardholder data. Regulators notified within 72h. Root cause: premature /webhooks rollout (NEX-240) under Payments schedule pressure. Remediation complete (PR #61); external QSA audit accelerated. Recommending a security-review merge gate and a hiring plan for the security team. Reference: docs/security-incident-postmortem.md.
