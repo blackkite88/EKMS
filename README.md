@@ -6,6 +6,30 @@ Built for a hackathon. Backend only (a frontend consumes the streaming API + gra
 
 ---
 
+## Quick start (TL;DR)
+
+```bash
+docker compose up -d                      # Neo4j + Postgres + ChromaDB
+cp .env.example .env                      # then set GROQ_API_KEY (+ JINA_API_KEY if using Jina)
+npm install
+npm run ingest:reset                      # builds vectors + the graph (~1 min)
+npm start                                 # API on http://localhost:3001
+```
+Then log in and ask a question:
+```bash
+TOKEN=$(curl -s -X POST localhost:3001/auth/login -H 'Content-Type: application/json' \
+  -d '{"email":"cto@nexora.com","password":"demo"}' | python3 -c 'import json,sys;print(json.load(sys.stdin)["token"])')
+
+curl -N -X POST localhost:3001/query -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"query":"Why was the Payments feature delayed?","sessionId":"demo1"}'
+```
+> On a corporate/Zscaler machine, run `npm run certs:zscaler` once, then use the `:zscaler` script variants (see [Corporate TLS / Zscaler](#corporate-tls--zscaler)).
+
+The full section-by-section setup is [below](#setup--run).
+
+---
+
 ## What makes it different
 
 Ordinary "AI search over company docs" retrieves the right document. Nexora goes three steps further:
@@ -131,6 +155,8 @@ cp .env.example .env
 # set GROQ_API_KEY (required); JINA_API_KEY if using Jina; Jira/Gmail optional
 ```
 
+> **⚠️ Groq free-tier token limit.** The free tier for `llama-3.3-70b-versatile` allows **100,000 tokens/day**. Ingestion (LLM graph enrichment) + a handful of queries + an eval run can exhaust it, after which every LLM call returns HTTP 429 until the daily reset. If answers suddenly go empty, check the server log for `rate_limit_exceeded` — that's the cap, not a bug. Use a paid Groq key for heavy testing. The graph/ABAC layer works without the LLM.
+
 ### 4. Install + ingest (builds vectors AND the graph)
 ```bash
 npm install
@@ -146,6 +172,8 @@ npm start          # API on http://localhost:3001
 ```bash
 npm run evals      # runs the demo questions, scores quality + access correctness
 ```
+
+> **Actions run in simulated mode by default.** `create_ticket` and `draft_email` only hit the real Jira/Gmail APIs if their credentials are set in `.env`. Otherwise they return a realistic simulated result (a fake ticket key / draft id) so nothing breaks — see the `mode: "live" | "simulated"` field on each `tool_result` event.
 
 ---
 
@@ -180,7 +208,19 @@ npm run evals      # runs the demo questions, scores quality + access correctnes
 | `tool_call` / `tool_result` | an MCP action + its result |
 | `done` then `[DONE]` | end of stream |
 
-Example (EventSource can't set headers, so pass `?token=`):
+**For the frontend:** the browser `EventSource` API cannot set an `Authorization` header, so pass the JWT as a query param instead — the auth middleware accepts `?token=<jwt>`:
+```js
+// POST body isn't possible with EventSource; use fetch + a stream reader,
+// or send the token via query string if you adapt to GET-style SSE.
+// With fetch (recommended, supports POST):
+const res = await fetch('/query', {
+  method: 'POST',
+  headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+  body: JSON.stringify({ query, sessionId }),
+});
+const reader = res.body.getReader();  // read the `data: {json}` SSE lines
+```
+curl equivalent:
 ```bash
 curl -N -X POST "http://localhost:3001/query" \
   -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
