@@ -5,11 +5,13 @@ import { BrainCircuit, Database, FileClock, LogOut, Menu, MessageSquareText, Net
 import { AuditLogPage } from '@/components/audit-log-page'
 import { ChatPanel } from '@/components/chat-panel'
 import { GraphCanvas } from '@/components/graph-canvas'
-import type { User } from '@/components/login-page'
+import { SourcesPage } from '@/components/sources-page'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { GraphStreamProvider } from '@/lib/graph-stream-context'
+import type { AuthUser } from '@/lib/types'
 
 type View = 'ask' | 'graph' | 'audit' | 'sources'
 
@@ -20,7 +22,11 @@ const navItems = [
   { id: 'sources' as const, label: 'Sources', icon: Database },
 ]
 
-export function Dashboard({ user, onLogout }: { user: User; onLogout: () => void }) {
+function initialsOf(name: string) {
+  return name.split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase()
+}
+
+export function Dashboard({ user, onLogout }: { user: AuthUser; onLogout: () => void }) {
   const [view, setView] = useState<View>('ask')
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -42,7 +48,7 @@ export function Dashboard({ user, onLogout }: { user: User; onLogout: () => void
         </div>
         <div className="p-4">
           <div className="flex items-center gap-3 rounded-xl border bg-background p-3">
-            <Avatar><AvatarFallback>{user.initials}</AvatarFallback></Avatar>
+            <Avatar><AvatarFallback>{initialsOf(user.name)}</AvatarFallback></Avatar>
             <div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{user.name}</p><p className="truncate text-xs text-muted-foreground">{user.title} · {user.department}</p></div>
             <Badge variant="secondary">L{user.clearance}</Badge>
           </div>
@@ -60,10 +66,12 @@ export function Dashboard({ user, onLogout }: { user: User; onLogout: () => void
       </aside>
 
       <div className="flex min-w-0 flex-1 pt-14 lg:pt-0">
-        {view === 'ask' && <div className="flex min-w-0 flex-1 flex-col lg:flex-row"><ChatPanel /><GraphCanvas /></div>}
-        {view === 'graph' && <GraphCanvas full />}
+        <GraphStreamProvider>
+          {view === 'ask' && <div className="flex min-w-0 flex-1 flex-col lg:flex-row"><ChatPanel /><GraphCanvas /></div>}
+          {view === 'graph' && <GraphCanvas full />}
+        </GraphStreamProvider>
         {view === 'audit' && <AuditLogPage />}
-        {view === 'sources' && <section className="flex flex-1 items-center justify-center p-6 text-center"><div><Database aria-hidden="true" className="mx-auto size-8 text-primary" /><h1 className="mt-4 text-xl font-semibold">Knowledge Sources</h1><p className="mt-2 max-w-sm text-sm text-muted-foreground">Connect your source management interface here. This frontend shell is ready for your backend data.</p></div></section>}
+        {view === 'sources' && <SourcesPage />}
       </div>
     </main>
   )
