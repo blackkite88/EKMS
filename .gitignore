@@ -1,7 +1,25 @@
+# Dependencies
 node_modules/
+
+# Environment / secrets
 .env
-*.log
+.env*.local
+backend/certs-zscaler.pem
+
+# OS / editor
 .DS_Store
-certs-zscaler.pem
-chroma_data/
-EVAL_REPORT.md
+*.log
+
+# Backend runtime data
+backend/chroma_data/
+backend/EVAL_REPORT.md
+
+# Frontend (Next.js)
+frontend/.next/
+frontend/out/
+frontend/.vercel/
+frontend/__v0_runtime_loader.js
+frontend/__v0_devtools.tsx
+frontend/__v0_jsx-dev-runtime.ts
+frontend/.snowflake/
+frontend/.v0-trash/
