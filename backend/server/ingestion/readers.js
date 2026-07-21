@@ -60,6 +60,18 @@ export async function readFileAsDocument(filePath) {
     const parsed = matter(raw);
     access = coerceAccess(parsed.data && parsed.data.access);
     text = parsed.content.trim();
+    // Surface any non-access frontmatter fields (e.g. equipment_id, date,
+    // regulation) as structured data the graph extractor can use, so markdown
+    // documents can carry structured links just like JSON records. YAML dates
+    // are parsed by gray-matter into Date objects — coerce them (and any other
+    // non-primitive) to ISO date strings so Neo4j can store them as properties.
+    if (parsed.data && typeof parsed.data === 'object') {
+      const { access: _a, ...rest } = parsed.data;
+      for (const [k, v] of Object.entries(rest)) {
+        if (v instanceof Date) rest[k] = v.toISOString().slice(0, 10);
+      }
+      if (Object.keys(rest).length > 0) structured = rest;
+    }
   } else {
     text = raw;
   }

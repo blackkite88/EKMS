@@ -94,6 +94,7 @@ export function extractBackbone(documents) {
           date: s.date || s.installed || null,
           status: s.status || null,
           equipment_id: s.equipment_id || null,
+          regulation: s.regulation || null,
         },
         access
       )

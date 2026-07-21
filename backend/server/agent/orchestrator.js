@@ -1,19 +1,22 @@
-// The orchestrator — the brain on top. For each query it:
+// The orchestrator — the brain on top. For each message it:
 //   1. streams auth context (who is reasoning)
-//   2. classifies intent (causal / factual / action)
-//   3. runs the knowledge-graph traversal (paced, observable) when useful
-//   4. runs hybrid retrieval (ABAC-filtered) for evidence text
-//   5. assembles context (graph reasoning + evidence + memory)
-//   6. calls Groq with streaming + tools; streams tokens, highlights citations
-//   7. executes any tool calls (MCP) and streams their results
-//   8. records the turn to memory and writes the audit log
+//   2. ROUTES via one combined router call (classify + rewrite + reply)
+//   3. dispatches to the right path:
+//        conversation → reply directly, no search
+//        rca          → deep causal traversal + RCA-structured answer
+//        compliance   → gap detection + compliance summary
+//        knowledge    → graph traversal + retrieval + cited answer
+//        action       → perform a governed tool action (Phase 5 adds permissions)
+//   4. streams tokens + citation highlights + confidence + time-to-answer
+//   5. records memory + writes the audit log
 import { getGroqClient, GROQ_MODEL } from '../config/groq.js';
-import { classifyIntent, INTENTS } from './intent.js';
+import { route } from './router.js';
 import { traverse } from '../graph/traversal.js';
 import { hybridSearch } from '../retrieval/hybrid.js';
 import { buildRetrievalContext, buildGraphContext, buildUserMessage, SYSTEM_PROMPT } from './prompts.js';
+import { RCA_SYSTEM_PROMPT, buildRcaContext, gatherRca } from './rca.js';
+import { COMPLIANCE_SYSTEM_PROMPT, buildComplianceContext, gatherCompliance } from './compliance.js';
 import { buildMemoryContext, recordTurn } from './memory.js';
-import { TOOLS } from '../mcp/tools.js';
 import { executeTool } from '../mcp/client.js';
 import { writeAudit } from '../middleware/auditLogger.js';
 import { createLogger } from '../utils/logger.js';
@@ -21,19 +24,8 @@ import { createLogger } from '../utils/logger.js';
 const log = createLogger('orchestrator');
 const CITATION_RE = /\[(EQUIPMENT|WO|INSPECTION|FAILURE|MANUAL|PROCEDURE|REGULATION|LOG)\s*\|\s*([^\]]+)\]/gi;
 
-function accumulateToolDeltas(store, delta) {
-  if (!delta.tool_calls) return;
-  for (const tc of delta.tool_calls) {
-    const idx = tc.index;
-    if (!store[idx]) store[idx] = { id: '', type: 'function', function: { name: '', arguments: '' } };
-    if (tc.id) store[idx].id = tc.id;
-    if (tc.function?.name) store[idx].function.name += tc.function.name;
-    if (tc.function?.arguments) store[idx].function.arguments += tc.function.arguments;
-  }
-}
+// ── helpers ─────────────────────────────────────────────────────────
 
-// Scan streamed text for complete citations and emit citation_highlight events
-// (only once per node id).
 function emitCitations(stream, buffer, alreadyEmitted) {
   let match;
   CITATION_RE.lastIndex = 0;
@@ -46,107 +38,190 @@ function emitCitations(stream, buffer, alreadyEmitted) {
   }
 }
 
-export async function runQuery({ query, user, sessionId, stream }) {
-  stream.authContext(user);
-
-  // 1. Intent
-  const intent = await classifyIntent(query);
-  stream.queryReceived(query, intent);
-  log.info(`Query from ${user.email} classified as ${intent}: "${query.slice(0, 60)}"`);
-
-  // 2. Graph traversal (for causal + factual; skipped for pure actions to keep
-  //    action latency low, though actions still get retrieval evidence).
-  let graph = { nodes: [], edges: [], blockedCount: 0, citations: [] };
-  if (intent === INTENTS.CAUSAL || intent === INTENTS.FACTUAL) {
-    try {
-      graph = await traverse(query, user, (ev) => stream.sendPaced(ev));
-    } catch (err) {
-      log.warn(`Traversal failed (continuing with retrieval only): ${err.message}`);
-    }
-  }
-
-  // 3. Hybrid retrieval (ABAC-filtered evidence)
-  let retrieval = { results: [], deniedCount: 0, candidateCount: 0 };
-  try {
-    retrieval = await hybridSearch(query, user);
-  } catch (err) {
-    log.error(`Retrieval failed: ${err.message}`);
-  }
-  stream.contextAssembled(retrieval.results.length);
-
-  // 4. Assemble context
-  const graphContext = buildGraphContext(graph);
-  const retrievalContext = buildRetrievalContext(retrieval.results);
-  const memoryContext = await buildMemoryContext(sessionId);
-  const userMessage = buildUserMessage({ query, graphContext, retrievalContext, memoryContext });
-
-  // 5. Call Groq with streaming + tools
+// Stream a completion, emitting text + citation highlights; returns the text.
+async function streamAnswer(stream, systemPrompt, userMessage, { temperature = 0.2, maxTokens = 1600 } = {}) {
   const client = getGroqClient();
-  const messages = [
-    { role: 'system', content: SYSTEM_PROMPT },
-    { role: 'user', content: userMessage },
-  ];
-
   let answerText = '';
-  const toolStore = {};
-  let hadToolCalls = false;
-  const emittedCitations = new Set();
-
+  const emitted = new Set();
   try {
     const completion = await client.chat.completions.create({
       model: GROQ_MODEL,
-      messages,
-      tools: TOOLS,
-      tool_choice: 'auto',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userMessage },
+      ],
       stream: true,
-      temperature: 0.2,
-      max_tokens: 1600,
+      temperature,
+      max_tokens: maxTokens,
     });
-
     for await (const chunk of completion) {
       const delta = chunk.choices[0]?.delta;
-      if (!delta) continue;
-      if (delta.content) {
+      if (delta?.content) {
         answerText += delta.content;
         stream.text(delta.content);
-        emitCitations(stream, answerText, emittedCitations);
-      }
-      if (delta.tool_calls?.length) {
-        hadToolCalls = true;
-        accumulateToolDeltas(toolStore, delta);
+        emitCitations(stream, answerText, emitted);
       }
     }
   } catch (err) {
     log.error(`LLM streaming failed: ${err.message}`);
     stream.error(`Model error: ${err.message}`);
   }
+  return answerText;
+}
 
-  // 6. Execute tool calls (MCP)
-  if (hadToolCalls) {
-    for (const tc of Object.values(toolStore)) {
-      let args = {};
-      try { args = JSON.parse(tc.function.arguments || '{}'); } catch { args = { raw: tc.function.arguments }; }
-      stream.toolCall(tc.function.name, args);
-      try {
-        const { result, mode } = await executeTool(tc.function.name, args, user);
-        stream.toolResult(tc.function.name, result, mode);
-      } catch (err) {
-        stream.toolResult(tc.function.name, { error: err.message }, 'error');
-      }
-    }
+// Heuristic confidence from retrieval strength + graph coverage.
+function confidenceOf(retrieval, graph) {
+  const sources = retrieval.results?.length || 0;
+  const graphNodes = graph?.nodes?.length || 0;
+  let level = 'low';
+  if (sources >= 5 && graphNodes >= 5) level = 'high';
+  else if (sources >= 3 || graphNodes >= 3) level = 'medium';
+  return { level, sourceCount: sources };
+}
+
+// Suggested contextual actions based on the route type + target.
+function suggestedActions(routed) {
+  switch (routed.type) {
+    case 'rca': return ['generate_rca_report', 'create_work_order', 'draft_notification'];
+    case 'compliance': return ['generate_compliance_report', 'create_work_order'];
+    default: return [];
+  }
+}
+
+// ── main entry ──────────────────────────────────────────────────────
+
+export async function runQuery({ query: message, user, sessionId, stream }) {
+  const startedAt = Date.now();
+  stream.authContext(user);
+
+  // 1. ROUTE (one combined call: classify + rewrite + maybe reply)
+  const memoryContext = await buildMemoryContext(sessionId);
+  const routed = await route(message, memoryContext);
+  const searchQuery = routed.query || message;
+  stream.queryReceived(searchQuery, routed.type);
+  // Surface the routing decision (and any rewrite) as visible intelligence.
+  stream.send({
+    type: 'routing',
+    decision: routed.type,
+    rewritten: routed.query && routed.query !== message ? routed.query : null,
+  });
+  log.info(`Route=${routed.type} for ${user.email}: "${message.slice(0, 50)}"${routed.query && routed.query !== message ? ` → "${routed.query.slice(0, 50)}"` : ''}`);
+
+  // 2a. CONVERSATION — reply directly, no search
+  if (routed.type === 'conversation') {
+    for (const ch of routed.reply) stream.text(ch); // stream char-ish for a live feel
+    await recordTurn(sessionId, user.email, 'user', message);
+    await recordTurn(sessionId, user.email, 'assistant', routed.reply);
+    await writeAudit({ userEmail: user.email, action: 'conversation', query: message });
+    stream.done({ elapsedMs: Date.now() - startedAt });
+    return;
   }
 
-  // 7. Memory + audit
-  await recordTurn(sessionId, user.email, 'user', query);
-  if (answerText) await recordTurn(sessionId, user.email, 'assistant', answerText);
+  // 2b. ACTION — Phase 5 adds permission gating; for now dispatch the tool
+  if (routed.type === 'action') {
+    stream.toolCall(routed.action, { target: routed.target, request: message });
+    try {
+      const { result, mode } = await executeTool(routed.action, { target: routed.target, query: searchQuery, user }, user);
+      stream.toolResult(routed.action, result, mode);
+    } catch (err) {
+      stream.toolResult(routed.action, { error: err.message }, 'error');
+    }
+    await recordTurn(sessionId, user.email, 'user', message);
+    await writeAudit({ userEmail: user.email, action: 'mcp_action', query: message, metadata: { tool: routed.action } });
+    stream.done({ elapsedMs: Date.now() - startedAt });
+    return;
+  }
+
+  // 2c. RCA — deep causal traversal + structured RCA answer
+  if (routed.type === 'rca') {
+    let graph = { nodes: [], edges: [], blockedCount: 0 };
+    let retrieval = { results: [], deniedCount: 0 };
+    try {
+      ({ graph, retrieval } = await gatherRca(searchQuery, user, (ev) => stream.sendPaced(ev)));
+    } catch (err) {
+      log.warn(`RCA gather failed: ${err.message}`);
+    }
+    stream.contextAssembled(retrieval.results.length);
+    if (retrieval.results.length === 0 && graph.nodes.length === 0) {
+      return finishEmpty(stream, sessionId, user, message, graph, retrieval, startedAt);
+    }
+    const ctx = buildRcaContext(graph, retrieval);
+    const answer = await streamAnswer(stream, RCA_SYSTEM_PROMPT, `${ctx}\n\nFAILURE QUESTION: ${searchQuery}`, { maxTokens: 1800 });
+    stream.send({ type: 'confidence', ...confidenceOf(retrieval, graph) });
+    stream.send({ type: 'suggested_actions', actions: suggestedActions(routed) });
+    return finish(stream, sessionId, user, message, answer, graph, retrieval, 'rca', startedAt);
+  }
+
+  // 2d. COMPLIANCE — gap detection + summary
+  if (routed.type === 'compliance') {
+    let gaps = [];
+    let retrieval = { results: [], deniedCount: 0 };
+    try {
+      ({ gaps, retrieval } = await gatherCompliance(searchQuery, user));
+    } catch (err) {
+      log.warn(`Compliance gather failed: ${err.message}`);
+    }
+    stream.contextAssembled(retrieval.results.length);
+    stream.send({ type: 'compliance_gaps', count: gaps.length, gaps });
+    const ctx = buildComplianceContext(gaps, retrieval);
+    const answer = await streamAnswer(stream, COMPLIANCE_SYSTEM_PROMPT, `${ctx}\n\nUSER QUESTION: ${searchQuery}`);
+    stream.send({ type: 'confidence', level: gaps.length >= 0 ? 'high' : 'medium', sourceCount: retrieval.results.length });
+    stream.send({ type: 'suggested_actions', actions: suggestedActions(routed) });
+    return finish(stream, sessionId, user, message, answer, { nodes: [], edges: [], blockedCount: 0 }, retrieval, 'compliance', startedAt);
+  }
+
+  // 2e. KNOWLEDGE — graph traversal (if causal) + retrieval + cited answer
+  let graph = { nodes: [], edges: [], blockedCount: 0 };
+  try {
+    graph = await traverse(searchQuery, user, (ev) => stream.sendPaced(ev));
+  } catch (err) {
+    log.warn(`Traversal failed (continuing with retrieval only): ${err.message}`);
+  }
+  let retrieval = { results: [], deniedCount: 0 };
+  try {
+    retrieval = await hybridSearch(searchQuery, user);
+  } catch (err) {
+    log.error(`Retrieval failed: ${err.message}`);
+  }
+  stream.contextAssembled(retrieval.results.length);
+  if (retrieval.results.length === 0 && graph.nodes.length === 0) {
+    return finishEmpty(stream, sessionId, user, message, graph, retrieval, startedAt);
+  }
+  const userMessage = buildUserMessage({
+    query: searchQuery,
+    graphContext: buildGraphContext(graph),
+    retrievalContext: buildRetrievalContext(retrieval.results),
+    memoryContext,
+  });
+  const answer = await streamAnswer(stream, SYSTEM_PROMPT, userMessage);
+  stream.send({ type: 'confidence', ...confidenceOf(retrieval, graph) });
+  return finish(stream, sessionId, user, message, answer, graph, retrieval, routed.intent || 'factual', startedAt);
+}
+
+// ── finishers ───────────────────────────────────────────────────────
+
+async function finish(stream, sessionId, user, message, answer, graph, retrieval, intent, startedAt) {
+  await recordTurn(sessionId, user.email, 'user', message);
+  if (answer) await recordTurn(sessionId, user.email, 'assistant', answer);
   await writeAudit({
     userEmail: user.email,
     action: 'query',
-    query,
-    grantedIds: retrieval.results.map((r) => r.metadata?.source_id).filter(Boolean),
-    deniedCount: retrieval.deniedCount + graph.blockedCount,
-    metadata: { intent, graphNodes: graph.nodes.length },
+    query: message,
+    grantedIds: (retrieval.results || []).map((r) => r.metadata?.source_id).filter(Boolean),
+    deniedCount: (retrieval.deniedCount || 0) + (graph.blockedCount || 0),
+    metadata: { intent, graphNodes: graph.nodes?.length || 0 },
   });
+  stream.done({ elapsedMs: Date.now() - startedAt });
+}
 
-  stream.done();
+async function finishEmpty(stream, sessionId, user, message, graph, retrieval, startedAt) {
+  const msg =
+    (graph.blockedCount || 0) > 0 || (retrieval.deniedCount || 0) > 0
+      ? 'Some information relevant to your question exists but is above your access level.'
+      : "I don't have enough information in the knowledge base to answer that.";
+  stream.text(msg);
+  await recordTurn(sessionId, user.email, 'user', message);
+  await recordTurn(sessionId, user.email, 'assistant', msg);
+  await writeAudit({ userEmail: user.email, action: 'query', query: message, deniedCount: (retrieval.deniedCount || 0) + (graph.blockedCount || 0), metadata: { empty: true } });
+  stream.done({ elapsedMs: Date.now() - startedAt });
 }

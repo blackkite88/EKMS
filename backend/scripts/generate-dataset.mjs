@@ -10,8 +10,12 @@ const dirs = ['equipment', 'workorders', 'inspections', 'failures', 'manuals', '
 for (const d of dirs) fs.mkdirSync(path.join(OUT, d), { recursive: true });
 
 const wj = (sub, name, obj) => fs.writeFileSync(path.join(OUT, sub, name), JSON.stringify(obj, null, 2));
-const fm = (a) => `---\naccess:\n  department: ${a.department}\n  unit: ${a.unit}\n  min_clearance: ${a.min_clearance}\n  sensitivity: ${a.sensitivity}\n---\n`;
-const wm = (sub, name, access, body) => fs.writeFileSync(path.join(OUT, sub, name), fm(access) + body + '\n');
+const fm = (a, extra = {}) => {
+  let s = `---\naccess:\n  department: ${a.department}\n  unit: ${a.unit}\n  min_clearance: ${a.min_clearance}\n  sensitivity: ${a.sensitivity}\n`;
+  for (const [k, v] of Object.entries(extra)) if (v != null) s += `${k}: ${v}\n`;
+  return s + '---\n';
+};
+const wm = (sub, name, access, body, extra = {}) => fs.writeFileSync(path.join(OUT, sub, name), fm(access, extra) + body + '\n');
 
 // ── ABAC presets (department / unit / clearance / sensitivity) ──
 const AC = {
@@ -143,9 +147,9 @@ console.log('workorders:', wos.length);
 // INSPECTIONS (22) — MD with frontmatter; INS-311 is the smoking gun
 // ══════════════════════════════════════════════════════════════════
 const inspections = [
-  { id:'INS-311', eq:'P-101', access:AC.maint, body:`# Vibration Inspection INS-311 — P-101\n\n**Equipment:** Crude Feed Pump P-101\n**Date:** 2025-02-14 (post seal replacement WO-2041)\n**Type:** Vibration monitoring (OISD-STD-106)\n\n## Readings\n| Point | Reading (mm/s RMS) | Alarm | Trip |\n|-------|-----|-------|------|\n| Drive-end bearing | 7.8 | 4.5 | 7.1 |\n| Non-drive-end | 5.2 | 4.5 | 7.1 |\n\n## Finding\nDrive-end vibration (7.8 mm/s) EXCEEDS both alarm (4.5) and trip (7.1) thresholds following the mechanical seal replacement under WO-2041. Pattern indicates possible shaft misalignment. **Logged but not escalated to maintenance engineering.** This elevated reading preceded bearing seizure FAIL-2025-03.\n\n**Related:** WO-2041, FAIL-2025-03, P-101, OISD-STD-106` },
-  { id:'INS-220', eq:'HX-208', access:AC.maint, body:`# Thickness Inspection INS-220 — HX-208\n\n**Date:** 2024-03-01\n**Type:** Ultrasonic thickness (OISD-STD-130)\n\n## Finding\nAccelerated tube-wall thinning detected on overhead condenser HX-208. Minimum measured thickness approaching retirement limit. Preceded tube leak FAIL-2024-02.\n\n**Related:** FAIL-2024-02, HX-208, OISD-STD-130` },
-  { id:'INS-405', eq:'F-101', access:AC.eng, body:`# Thermographic Inspection INS-405 — F-101\n\n**Date:** 2024-07-25\n**Type:** Thermography\n\n## Finding\nLocalized hot spot on crude heater F-101 radiant tubes from flame impingement (burner fouling). Related to excursion FAIL-2024-06. Burner cleaning recommended.\n\n**Related:** FAIL-2024-06, F-101` },
+  { id:'INS-311', eq:'P-101', date:'2025-02-14', reg:'OISD-STD-106', access:AC.maint, body:`# Vibration Inspection INS-311 — P-101\n\n**Equipment:** Crude Feed Pump P-101\n**Date:** 2025-02-14 (post seal replacement WO-2041)\n**Type:** Vibration monitoring (OISD-STD-106)\n\n## Readings\n| Point | Reading (mm/s RMS) | Alarm | Trip |\n|-------|-----|-------|------|\n| Drive-end bearing | 7.8 | 4.5 | 7.1 |\n| Non-drive-end | 5.2 | 4.5 | 7.1 |\n\n## Finding\nDrive-end vibration (7.8 mm/s) EXCEEDS both alarm (4.5) and trip (7.1) thresholds following the mechanical seal replacement under WO-2041. Pattern indicates possible shaft misalignment. **Logged but not escalated to maintenance engineering.** This elevated reading preceded bearing seizure FAIL-2025-03.\n\n**Related:** WO-2041, FAIL-2025-03, P-101, OISD-STD-106` },
+  { id:'INS-220', eq:'HX-208', date:'2024-03-01', reg:'OISD-STD-130', access:AC.maint, body:`# Thickness Inspection INS-220 — HX-208\n\n**Date:** 2024-03-01\n**Type:** Ultrasonic thickness (OISD-STD-130)\n\n## Finding\nAccelerated tube-wall thinning detected on overhead condenser HX-208. Minimum measured thickness approaching retirement limit. Preceded tube leak FAIL-2024-02.\n\n**Related:** FAIL-2024-02, HX-208, OISD-STD-130` },
+  { id:'INS-405', eq:'F-101', date:'2024-07-25', reg:'OISD-STD-113', access:AC.eng, body:`# Thermographic Inspection INS-405 — F-101\n\n**Date:** 2024-07-25\n**Type:** Thermography\n\n## Finding\nLocalized hot spot on crude heater F-101 radiant tubes from flame impingement (burner fouling). Related to excursion FAIL-2024-06. Burner cleaning recommended.\n\n**Related:** FAIL-2024-06, F-101` },
 ];
 // compliance-relevant + routine inspections
 const inspRoutine = [
@@ -170,8 +174,8 @@ const inspRoutine = [
   ['INS-219','T-502',AC.ops,'Visual','2025-01-12','Normal','OISD-STD-129','Visual inspection satisfactory.'],
 ];
 for (const [id,eq,access,type,date,result,reg,finding] of inspRoutine)
-  inspections.push({ id, eq, access, body:`# ${type} Inspection ${id} — ${eq}\n\n**Date:** ${date}\n**Type:** ${type} (${reg})\n**Result:** ${result}\n\n## Finding\n${finding}\n\n**Related:** ${eq}, ${reg}` });
-for (const i of inspections) wm('inspections', `${i.id}.md`, i.access, i.body);
+  inspections.push({ id, eq, date, reg, access, body:`# ${type} Inspection ${id} — ${eq}\n\n**Date:** ${date}\n**Type:** ${type} (${reg})\n**Result:** ${result}\n\n## Finding\n${finding}\n\n**Related:** ${eq}, ${reg}` });
+for (const i of inspections) wm('inspections', `${i.id}.md`, i.access, i.body, { equipment_id: i.eq, date: i.date, regulation: i.reg });
 console.log('inspections:', inspections.length);
 
 // ══════════════════════════════════════════════════════════════════

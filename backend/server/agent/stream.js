@@ -76,8 +76,8 @@ export class SSEStream {
     this.send({ type: 'error', message });
   }
 
-  done() {
-    this.send({ type: 'done' });
+  done(extra = {}) {
+    this.send({ type: 'done', ...extra });
     if (!this.closed) this.res.write('data: [DONE]\n\n');
     this.end();
   }
