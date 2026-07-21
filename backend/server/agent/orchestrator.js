@@ -79,6 +79,26 @@ function confidenceOf(retrieval, graph) {
   return { level, sourceCount: sources };
 }
 
+// A human-readable confirmation (or denial) for a completed action.
+function actionConfirmationText(action, result, mode) {
+  if (mode === 'denied') {
+    return result?.reason || "You don't have permission to perform that action.";
+  }
+  if (result?.error) return `The action could not be completed: ${result.error}`;
+  switch (action) {
+    case 'create_work_order':
+      return `✓ Work order **${result.wo_number}** created${result.equipment_id ? ` for ${result.equipment_id}` : ''} (priority: ${result.priority}, status: ${result.status}). It's now in the Work Orders section.`;
+    case 'draft_notification':
+      return `✓ Notification sent to **${result.recipient}**${result.related_to ? ` regarding ${result.related_to}` : ''}. They'll see it in their inbox.`;
+    case 'generate_rca_report':
+      return `✓ RCA report **#${result.report_id}** generated${result.equipment_id ? ` for ${result.equipment_id}` : ''} (${result.sections} sections). Available in Reports.`;
+    case 'generate_compliance_report':
+      return `✓ Compliance report **#${result.report_id}** generated covering ${result.gap_count} gap(s). Available in the Compliance section.`;
+    default:
+      return '✓ Action completed.';
+  }
+}
+
 // Suggested contextual actions based on the route type + target.
 function suggestedActions(routed) {
   switch (routed.type) {
@@ -117,16 +137,22 @@ export async function runQuery({ query: message, user, sessionId, stream }) {
     return;
   }
 
-  // 2b. ACTION — Phase 5 adds permission gating; for now dispatch the tool
+  // 2b. ACTION — permission-gated tool dispatch with a confirmation message.
   if (routed.type === 'action') {
     stream.toolCall(routed.action, { target: routed.target, request: message });
+    let confirmation = '';
     try {
       const { result, mode } = await executeTool(routed.action, { target: routed.target, query: searchQuery, user }, user);
       stream.toolResult(routed.action, result, mode);
+      confirmation = actionConfirmationText(routed.action, result, mode);
     } catch (err) {
       stream.toolResult(routed.action, { error: err.message }, 'error');
+      confirmation = `I couldn't complete that action: ${err.message}`;
     }
+    // Stream the confirmation as text so the user always gets a readable reply.
+    stream.text(confirmation);
     await recordTurn(sessionId, user.email, 'user', message);
+    await recordTurn(sessionId, user.email, 'assistant', confirmation);
     await writeAudit({ userEmail: user.email, action: 'mcp_action', query: message, metadata: { tool: routed.action } });
     stream.done({ elapsedMs: Date.now() - startedAt });
     return;
