@@ -1,0 +1,18 @@
+{
+  "id": "FAIL-2025-01",
+  "equipment_id": "P-220",
+  "title": "P-220 Cooling Water Pump Cavitation",
+  "date": "2025-01-28",
+  "severity": "Low",
+  "downtime_hours": 2,
+  "access": {
+    "department": "maintenance",
+    "unit": "unit-1",
+    "min_clearance": 2,
+    "sensitivity": "internal"
+  },
+  "failure_mode": "Cavitation",
+  "immediate_cause": "Suction strainer blockage.",
+  "description": "Cooling water pump P-220 cavitation from a blocked suction strainer. Strainer cleaned.",
+  "root_cause": "Suction strainer blockage."
+}

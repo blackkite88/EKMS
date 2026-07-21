@@ -1,0 +1,20 @@
+{
+  "id": "K-401",
+  "name": "Makeup Gas Compressor K-401",
+  "type": "Centrifugal Compressor",
+  "unit": "Unit-4",
+  "service": "Makeup hydrogen",
+  "manufacturer": "Siemens",
+  "model": "STC-500",
+  "installed": "2019-06-20",
+  "criticality": "High",
+  "access": {
+    "department": "engineering",
+    "unit": "unit-2",
+    "min_clearance": 4,
+    "sensitivity": "internal"
+  },
+  "governed_by": [
+    "OISD-STD-106"
+  ]
+}

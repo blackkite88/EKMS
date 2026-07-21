@@ -1,0 +1,20 @@
+{
+  "id": "P-210",
+  "name": "Reflux Pump P-210",
+  "type": "Centrifugal Pump",
+  "unit": "Unit-2",
+  "service": "Reflux",
+  "manufacturer": "KSB",
+  "model": "RPH-150",
+  "installed": "2018-05-22",
+  "criticality": "Medium",
+  "access": {
+    "department": "maintenance",
+    "unit": "unit-2",
+    "min_clearance": 2,
+    "sensitivity": "internal"
+  },
+  "governed_by": [
+    "OISD-STD-106"
+  ]
+}

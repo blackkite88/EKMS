@@ -1,0 +1,10 @@
+---
+access:
+  department: operations
+  unit: unit-2
+  min_clearance: 1
+  sensitivity: public
+---
+Operating Log Summary — Unit-2 — July 2024
+
+F-101 tube skin temperature excursion 2024-07-20. Burner cleaned. Related: F-101, FAIL-2024-06.

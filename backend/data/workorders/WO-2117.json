@@ -1,0 +1,17 @@
+{
+  "id": "WO-2117",
+  "equipment_id": "V-420",
+  "title": "V-420 Internal Inspection",
+  "type": "Preventive",
+  "priority": "Medium",
+  "status": "Completed",
+  "date": "2024-08-20",
+  "technician": "QA Team",
+  "access": {
+    "department": "engineering",
+    "unit": "unit-2",
+    "min_clearance": 4,
+    "sensitivity": "internal"
+  },
+  "description": "V-420 Internal Inspection for V-420."
+}

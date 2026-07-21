@@ -1,0 +1,17 @@
+{
+  "id": "C-302",
+  "name": "Instrument Air Compressor C-302",
+  "type": "Screw Compressor",
+  "unit": "Utilities",
+  "service": "Instrument air",
+  "manufacturer": "Atlas Copco",
+  "model": "GA-160",
+  "installed": "2020-01-08",
+  "criticality": "Medium",
+  "access": {
+    "department": "maintenance",
+    "unit": "unit-1",
+    "min_clearance": 2,
+    "sensitivity": "internal"
+  }
+}

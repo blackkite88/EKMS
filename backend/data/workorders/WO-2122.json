@@ -1,0 +1,17 @@
+{
+  "id": "WO-2122",
+  "equipment_id": "F-101",
+  "title": "F-101 Thermographic Survey",
+  "type": "Preventive",
+  "priority": "Medium",
+  "status": "Open",
+  "date": "2025-03-22",
+  "technician": "Team-B",
+  "access": {
+    "department": "engineering",
+    "unit": "unit-2",
+    "min_clearance": 4,
+    "sensitivity": "internal"
+  },
+  "description": "F-101 Thermographic Survey for F-101."
+}

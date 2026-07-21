@@ -1,0 +1,17 @@
+{
+  "id": "WO-2116",
+  "equipment_id": "P-230",
+  "title": "P-230 Seal Inspection",
+  "type": "Preventive",
+  "priority": "Medium",
+  "status": "Completed",
+  "date": "2025-02-05",
+  "technician": "S. Iyer",
+  "access": {
+    "department": "maintenance",
+    "unit": "unit-2",
+    "min_clearance": 2,
+    "sensitivity": "internal"
+  },
+  "description": "P-230 Seal Inspection for P-230."
+}

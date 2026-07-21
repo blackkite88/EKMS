@@ -1,0 +1,17 @@
+{
+  "id": "WO-2119",
+  "equipment_id": "HX-208",
+  "title": "HX-208 Thickness Re-survey",
+  "type": "Preventive",
+  "priority": "Medium",
+  "status": "Open",
+  "date": "2025-03-25",
+  "technician": "QA Team",
+  "access": {
+    "department": "maintenance",
+    "unit": "unit-2",
+    "min_clearance": 2,
+    "sensitivity": "internal"
+  },
+  "description": "HX-208 Thickness Re-survey for HX-208."
+}

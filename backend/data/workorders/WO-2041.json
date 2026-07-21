@@ -1,0 +1,21 @@
+{
+  "id": "WO-2041",
+  "equipment_id": "P-101",
+  "title": "P-101 Mechanical Seal Replacement",
+  "type": "Corrective",
+  "priority": "High",
+  "status": "Completed",
+  "date": "2025-02-10",
+  "technician": "R. Kulkarni",
+  "access": {
+    "department": "maintenance",
+    "unit": "unit-2",
+    "min_clearance": 2,
+    "sensitivity": "internal"
+  },
+  "description": "Replaced leaking mechanical seal on P-101 per SOP-SEAL-REPL. Seal replaced, pump returned to service. NOTE: SOP-SEAL-REPL does not include a post-replacement shaft alignment check; alignment was not verified. Later identified as the root cause of failure FAIL-2025-03.",
+  "procedure": "SOP-SEAL-REPL",
+  "related_failures": [
+    "FAIL-2025-03"
+  ]
+}

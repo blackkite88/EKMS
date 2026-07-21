@@ -1,0 +1,19 @@
+{
+  "id": "T-501",
+  "name": "Product Storage Tank T-501",
+  "type": "Storage Tank",
+  "unit": "Tank Farm",
+  "service": "Finished product storage",
+  "manufacturer": "BPI Fabrication",
+  "installed": "2015-01-10",
+  "criticality": "Medium",
+  "access": {
+    "department": "operations",
+    "unit": "unit-2",
+    "min_clearance": 1,
+    "sensitivity": "public"
+  },
+  "governed_by": [
+    "OISD-STD-129"
+  ]
+}

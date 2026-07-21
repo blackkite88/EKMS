@@ -1,0 +1,21 @@
+{
+  "id": "FAIL-2024-06",
+  "equipment_id": "F-101",
+  "title": "F-101 Tube Skin Temperature Excursion",
+  "date": "2024-07-20",
+  "severity": "Medium",
+  "downtime_hours": 0,
+  "access": {
+    "department": "engineering",
+    "unit": "unit-2",
+    "min_clearance": 4,
+    "sensitivity": "internal"
+  },
+  "failure_mode": "Localized overheating",
+  "immediate_cause": "Flame impingement from a fouled burner.",
+  "description": "Crude heater F-101 experienced a tube skin temperature excursion. No downtime; burner cleaned. Thermographic inspection INS-405 recommended.",
+  "root_cause": "Burner fouling causing flame impingement.",
+  "related_inspections": [
+    "INS-405"
+  ]
+}

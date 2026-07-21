@@ -1,0 +1,19 @@
+{
+  "id": "T-502",
+  "name": "Slop Tank T-502",
+  "type": "Storage Tank",
+  "unit": "Tank Farm",
+  "service": "Slop collection",
+  "manufacturer": "BPI Fabrication",
+  "installed": "2015-01-10",
+  "criticality": "Low",
+  "access": {
+    "department": "operations",
+    "unit": "unit-2",
+    "min_clearance": 1,
+    "sensitivity": "public"
+  },
+  "governed_by": [
+    "OISD-STD-129"
+  ]
+}

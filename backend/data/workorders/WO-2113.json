@@ -1,0 +1,17 @@
+{
+  "id": "WO-2113",
+  "equipment_id": "P-102",
+  "title": "P-102 Standby Test Run",
+  "type": "Preventive",
+  "priority": "Medium",
+  "status": "Completed",
+  "date": "2025-01-10",
+  "technician": "R. Kulkarni",
+  "access": {
+    "department": "maintenance",
+    "unit": "unit-2",
+    "min_clearance": 2,
+    "sensitivity": "internal"
+  },
+  "description": "P-102 Standby Test Run for P-102."
+}

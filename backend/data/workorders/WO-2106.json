@@ -1,0 +1,17 @@
+{
+  "id": "WO-2106",
+  "equipment_id": "P-215",
+  "title": "P-215 Vibration Check",
+  "type": "Preventive",
+  "priority": "Medium",
+  "status": "Completed",
+  "date": "2025-02-20",
+  "technician": "S. Iyer",
+  "access": {
+    "department": "maintenance",
+    "unit": "unit-2",
+    "min_clearance": 2,
+    "sensitivity": "internal"
+  },
+  "description": "P-215 Vibration Check for P-215."
+}

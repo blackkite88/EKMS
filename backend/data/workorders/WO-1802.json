@@ -1,0 +1,20 @@
+{
+  "id": "WO-1802",
+  "equipment_id": "P-215",
+  "title": "P-215 Seal Replacement",
+  "type": "Corrective",
+  "priority": "Medium",
+  "status": "Completed",
+  "date": "2023-12-15",
+  "technician": "S. Iyer",
+  "access": {
+    "department": "maintenance",
+    "unit": "unit-2",
+    "min_clearance": 2,
+    "sensitivity": "internal"
+  },
+  "description": "Replaced mechanical seal on bottoms pump P-215 (FAIL-2023-11).",
+  "related_failures": [
+    "FAIL-2023-11"
+  ]
+}

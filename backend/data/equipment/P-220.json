@@ -1,0 +1,20 @@
+{
+  "id": "P-220",
+  "name": "Cooling Water Pump P-220",
+  "type": "Centrifugal Pump",
+  "unit": "Utilities",
+  "service": "Cooling water",
+  "manufacturer": "Kirloskar",
+  "model": "KP-400",
+  "installed": "2020-03-01",
+  "criticality": "Medium",
+  "access": {
+    "department": "maintenance",
+    "unit": "unit-1",
+    "min_clearance": 2,
+    "sensitivity": "internal"
+  },
+  "governed_by": [
+    "OISD-STD-106"
+  ]
+}

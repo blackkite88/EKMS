@@ -1,0 +1,17 @@
+{
+  "id": "WO-2102",
+  "equipment_id": "HX-205",
+  "title": "HX-205 Cleaning (turnaround)",
+  "type": "Preventive",
+  "priority": "Medium",
+  "status": "Completed",
+  "date": "2024-11-20",
+  "technician": "Team-A",
+  "access": {
+    "department": "maintenance",
+    "unit": "unit-2",
+    "min_clearance": 2,
+    "sensitivity": "internal"
+  },
+  "description": "HX-205 Cleaning (turnaround) for HX-205."
+}

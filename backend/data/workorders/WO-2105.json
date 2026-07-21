@@ -1,0 +1,17 @@
+{
+  "id": "WO-2105",
+  "equipment_id": "T-501",
+  "title": "T-501 Roof Seal Check",
+  "type": "Preventive",
+  "priority": "Medium",
+  "status": "Completed",
+  "date": "2025-01-05",
+  "technician": "Ops Team",
+  "access": {
+    "department": "operations",
+    "unit": "unit-2",
+    "min_clearance": 1,
+    "sensitivity": "public"
+  },
+  "description": "T-501 Roof Seal Check for T-501."
+}

@@ -1,0 +1,22 @@
+{
+  "id": "V-420",
+  "name": "Amine Absorber V-420",
+  "type": "Pressure Vessel",
+  "unit": "Unit-4",
+  "service": "Amine treating",
+  "manufacturer": "L&T",
+  "model": "PV-ABS-420",
+  "installed": "2016-09-15",
+  "design_pressure_barg": 70,
+  "criticality": "High",
+  "access": {
+    "department": "engineering",
+    "unit": "unit-2",
+    "min_clearance": 4,
+    "sensitivity": "internal"
+  },
+  "governed_by": [
+    "PESO-SMPV-2016",
+    "OISD-STD-105"
+  ]
+}

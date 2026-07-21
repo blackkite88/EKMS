@@ -1,0 +1,17 @@
+{
+  "id": "WO-2104",
+  "equipment_id": "V-410",
+  "title": "V-410 External Visual Inspection",
+  "type": "Preventive",
+  "priority": "Medium",
+  "status": "Completed",
+  "date": "2024-10-10",
+  "technician": "QA Team",
+  "access": {
+    "department": "engineering",
+    "unit": "unit-2",
+    "min_clearance": 4,
+    "sensitivity": "internal"
+  },
+  "description": "V-410 External Visual Inspection for V-410."
+}

@@ -1,0 +1,17 @@
+{
+  "id": "WO-2112",
+  "equipment_id": "P-101",
+  "title": "P-101 Quarterly Lubrication",
+  "type": "Preventive",
+  "priority": "Medium",
+  "status": "Completed",
+  "date": "2024-12-01",
+  "technician": "R. Kulkarni",
+  "access": {
+    "department": "maintenance",
+    "unit": "unit-2",
+    "min_clearance": 2,
+    "sensitivity": "internal"
+  },
+  "description": "P-101 Quarterly Lubrication for P-101."
+}

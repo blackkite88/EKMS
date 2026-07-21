@@ -1,0 +1,18 @@
+{
+  "id": "FAIL-2023-04",
+  "equipment_id": "V-411",
+  "title": "V-411 Relief Valve Passing",
+  "date": "2023-05-09",
+  "severity": "Medium",
+  "downtime_hours": 0,
+  "access": {
+    "department": "engineering",
+    "unit": "unit-2",
+    "min_clearance": 4,
+    "sensitivity": "internal"
+  },
+  "failure_mode": "Relief valve passing",
+  "immediate_cause": "Valve seat damage.",
+  "description": "LP separator V-411 pressure relief valve found passing during inspection. Valve overhauled.",
+  "root_cause": "PSV seat damage."
+}

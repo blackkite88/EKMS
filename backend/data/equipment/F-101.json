@@ -1,0 +1,20 @@
+{
+  "id": "F-101",
+  "name": "Crude Heater F-101",
+  "type": "Fired Heater",
+  "unit": "Unit-2",
+  "service": "Crude heating",
+  "manufacturer": "Thermax",
+  "model": "FH-5000",
+  "installed": "2016-12-01",
+  "criticality": "High",
+  "access": {
+    "department": "engineering",
+    "unit": "unit-2",
+    "min_clearance": 4,
+    "sensitivity": "internal"
+  },
+  "governed_by": [
+    "OISD-STD-113"
+  ]
+}

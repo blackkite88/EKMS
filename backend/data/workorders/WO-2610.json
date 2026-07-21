@@ -1,0 +1,20 @@
+{
+  "id": "WO-2610",
+  "equipment_id": "K-401",
+  "title": "K-401 Coupling Rebalance",
+  "type": "Corrective",
+  "priority": "Medium",
+  "status": "Completed",
+  "date": "2024-12-31",
+  "technician": "A. Bose",
+  "access": {
+    "department": "engineering",
+    "unit": "unit-2",
+    "min_clearance": 4,
+    "sensitivity": "internal"
+  },
+  "description": "Rebalanced coupling on makeup gas compressor K-401 (FAIL-2024-12).",
+  "related_failures": [
+    "FAIL-2024-12"
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "id": "P-230",
+  "name": "Product Transfer Pump P-230",
+  "type": "Centrifugal Pump",
+  "unit": "Unit-2",
+  "service": "Product transfer",
+  "manufacturer": "KSB",
+  "model": "RPH-150",
+  "installed": "2018-05-22",
+  "criticality": "Low",
+  "access": {
+    "department": "maintenance",
+    "unit": "unit-2",
+    "min_clearance": 2,
+    "sensitivity": "internal"
+  },
+  "governed_by": [
+    "OISD-STD-106"
+  ]
+}

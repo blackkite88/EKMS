@@ -1,0 +1,17 @@
+{
+  "id": "WO-2107",
+  "equipment_id": "HX-208",
+  "title": "HX-208 Tube Plugging (interim)",
+  "type": "Corrective",
+  "priority": "Medium",
+  "status": "Completed",
+  "date": "2024-04-12",
+  "technician": "Team-A",
+  "access": {
+    "department": "maintenance",
+    "unit": "unit-2",
+    "min_clearance": 2,
+    "sensitivity": "internal"
+  },
+  "description": "HX-208 Tube Plugging (interim) for HX-208."
+}

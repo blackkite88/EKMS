@@ -1,0 +1,17 @@
+{
+  "id": "WO-2121",
+  "equipment_id": "C-301",
+  "title": "C-301 Vibration Monitoring",
+  "type": "Preventive",
+  "priority": "Medium",
+  "status": "Open",
+  "date": "2025-03-30",
+  "technician": "A. Bose",
+  "access": {
+    "department": "maintenance",
+    "unit": "unit-1",
+    "min_clearance": 2,
+    "sensitivity": "internal"
+  },
+  "description": "C-301 Vibration Monitoring for C-301."
+}

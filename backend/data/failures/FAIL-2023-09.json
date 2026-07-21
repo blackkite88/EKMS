@@ -1,0 +1,18 @@
+{
+  "id": "FAIL-2023-09",
+  "equipment_id": "HX-205",
+  "title": "HX-205 Fouling-Related Efficiency Loss",
+  "date": "2023-10-18",
+  "severity": "Low",
+  "downtime_hours": 0,
+  "access": {
+    "department": "maintenance",
+    "unit": "unit-2",
+    "min_clearance": 2,
+    "sensitivity": "internal"
+  },
+  "failure_mode": "Fouling",
+  "immediate_cause": "Crude-side fouling.",
+  "description": "Preheat exchanger HX-205 showed declining heat transfer from fouling. Cleaned during turnaround.",
+  "root_cause": "Crude-side fouling."
+}

@@ -1,0 +1,17 @@
+{
+  "id": "WO-2101",
+  "equipment_id": "P-210",
+  "title": "Reflux Pump P-210 Bearing Greasing",
+  "type": "Preventive",
+  "priority": "Medium",
+  "status": "Completed",
+  "date": "2025-01-15",
+  "technician": "S. Iyer",
+  "access": {
+    "department": "maintenance",
+    "unit": "unit-2",
+    "min_clearance": 2,
+    "sensitivity": "internal"
+  },
+  "description": "Reflux Pump P-210 Bearing Greasing for P-210."
+}

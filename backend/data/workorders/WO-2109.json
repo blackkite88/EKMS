@@ -1,0 +1,17 @@
+{
+  "id": "WO-2109",
+  "equipment_id": "F-101",
+  "title": "F-101 Burner Cleaning",
+  "type": "Corrective",
+  "priority": "Medium",
+  "status": "Completed",
+  "date": "2024-07-21",
+  "technician": "Team-B",
+  "access": {
+    "department": "engineering",
+    "unit": "unit-2",
+    "min_clearance": 4,
+    "sensitivity": "internal"
+  },
+  "description": "F-101 Burner Cleaning for F-101."
+}

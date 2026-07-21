@@ -1,0 +1,21 @@
+{
+  "id": "FAIL-2024-02",
+  "equipment_id": "HX-208",
+  "title": "HX-208 Tube Leak",
+  "date": "2024-04-11",
+  "severity": "Medium",
+  "downtime_hours": 6,
+  "access": {
+    "department": "maintenance",
+    "unit": "unit-2",
+    "min_clearance": 2,
+    "sensitivity": "internal"
+  },
+  "failure_mode": "Tube leak",
+  "immediate_cause": "Tube wall thinning from corrosion.",
+  "description": "Overhead condenser HX-208 developed a tube leak. Thickness inspection INS-220 had flagged accelerated thinning. Tubes plugged as interim measure.",
+  "root_cause": "Corrosion-driven tube wall thinning.",
+  "related_inspections": [
+    "INS-220"
+  ]
+}

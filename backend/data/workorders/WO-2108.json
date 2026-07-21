@@ -1,0 +1,17 @@
+{
+  "id": "WO-2108",
+  "equipment_id": "C-302",
+  "title": "C-302 Aftercooler Cleaning",
+  "type": "Corrective",
+  "priority": "Medium",
+  "status": "Completed",
+  "date": "2024-10-03",
+  "technician": "A. Bose",
+  "access": {
+    "department": "maintenance",
+    "unit": "unit-1",
+    "min_clearance": 2,
+    "sensitivity": "internal"
+  },
+  "description": "C-302 Aftercooler Cleaning for C-302."
+}

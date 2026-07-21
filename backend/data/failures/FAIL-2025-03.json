@@ -1,0 +1,42 @@
+{
+  "id": "FAIL-2025-03",
+  "equipment_id": "P-101",
+  "title": "P-101 Bearing Seizure — 14h Unplanned Downtime",
+  "date": "2025-03-18",
+  "severity": "High",
+  "downtime_hours": 14,
+  "access": {
+    "department": "maintenance",
+    "unit": "unit-2",
+    "min_clearance": 2,
+    "sensitivity": "internal"
+  },
+  "failure_mode": "Bearing seizure",
+  "immediate_cause": "Drive-end bearing seized due to progressive overheating and loss of clearance.",
+  "description": "Crude Feed Pump P-101 tripped on high vibration and motor overload at 03:12. Inspection found the drive-end bearing seized. Root-cause investigation traced elevated vibration back to a mechanical seal replacement (WO-2041) after which shaft alignment was not verified — a step required by the OEM manual (MAN-KSB-RPH200) but ABSENT from the site SOP (SOP-SEAL-REPL). Post-maintenance vibration inspection INS-311 recorded elevated readings that were logged but not escalated. Operating logs (LOG-2025-03) show P-101 was also run above rated flow. This failure is a repeat of the P-102 bearing failure of 2023 (FAIL-2023-07), whose corrective action (update the SOP) was never implemented.",
+  "contributing_factors": [
+    "Shaft misalignment after seal replacement (WO-2041)",
+    "Elevated vibration not escalated (INS-311)",
+    "Operation above rated flow (LOG-2025-03)"
+  ],
+  "root_cause": "Systemic: SOP-SEAL-REPL omits the mandatory post-seal-replacement alignment verification required by MAN-KSB-RPH200. Identical to the unresolved root cause of FAIL-2023-07 on P-102.",
+  "related_workorders": [
+    "WO-2041",
+    "WO-2050"
+  ],
+  "related_inspections": [
+    "INS-311"
+  ],
+  "related_manuals": [
+    "MAN-KSB-RPH200"
+  ],
+  "related_procedures": [
+    "SOP-SEAL-REPL"
+  ],
+  "related_logs": [
+    "LOG-2025-03"
+  ],
+  "similar_to": [
+    "FAIL-2023-07"
+  ]
+}

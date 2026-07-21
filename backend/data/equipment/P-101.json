@@ -1,0 +1,25 @@
+{
+  "id": "P-101",
+  "name": "Crude Feed Pump P-101",
+  "type": "Centrifugal Pump",
+  "unit": "Unit-2",
+  "service": "Hydrocarbon (crude feed)",
+  "manufacturer": "KSB",
+  "model": "RPH-200",
+  "installed": "2018-03-12",
+  "rated_flow_m3h": 220,
+  "criticality": "High",
+  "access": {
+    "department": "maintenance",
+    "unit": "unit-2",
+    "min_clearance": 2,
+    "sensitivity": "internal"
+  },
+  "description": "Primary crude feed pump for Unit-2 atmospheric distillation. Mechanical seal, anti-friction bearings. Subject to OISD-STD-106 vibration monitoring.",
+  "related_manuals": [
+    "MAN-KSB-RPH200"
+  ],
+  "governed_by": [
+    "OISD-STD-106"
+  ]
+}

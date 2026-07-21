@@ -1,0 +1,20 @@
+{
+  "id": "WO-2050",
+  "equipment_id": "P-101",
+  "title": "P-101 Bearing Replacement (post-failure)",
+  "type": "Breakdown",
+  "priority": "Critical",
+  "status": "Completed",
+  "date": "2025-03-19",
+  "technician": "R. Kulkarni",
+  "access": {
+    "department": "maintenance",
+    "unit": "unit-2",
+    "min_clearance": 2,
+    "sensitivity": "internal"
+  },
+  "description": "Emergency bearing replacement after P-101 seizure (FAIL-2025-03). Shaft alignment verified and corrected. Recommend updating SOP-SEAL-REPL.",
+  "related_failures": [
+    "FAIL-2025-03"
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "id": "FAIL-2023-11",
+  "equipment_id": "P-215",
+  "title": "P-215 Seal Leak",
+  "date": "2023-12-14",
+  "severity": "Low",
+  "downtime_hours": 4,
+  "access": {
+    "department": "maintenance",
+    "unit": "unit-2",
+    "min_clearance": 2,
+    "sensitivity": "internal"
+  },
+  "failure_mode": "Seal leak",
+  "immediate_cause": "Mechanical seal wear.",
+  "description": "Bottoms pump P-215 mechanical seal leak. Seal replaced under WO-1802.",
+  "root_cause": "Normal seal wear.",
+  "related_workorders": [
+    "WO-1802"
+  ]
+}

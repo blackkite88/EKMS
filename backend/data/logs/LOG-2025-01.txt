@@ -1,0 +1,10 @@
+---
+access:
+  department: operations
+  unit: unit-2
+  min_clearance: 1
+  sensitivity: public
+---
+Operating Log Summary — Unit-2 — January 2025
+
+Normal operations. HX-208 flagged for thickness re-survey. Related: HX-208.

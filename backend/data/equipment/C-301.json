@@ -1,0 +1,20 @@
+{
+  "id": "C-301",
+  "name": "Recycle Gas Compressor C-301",
+  "type": "Reciprocating Compressor",
+  "unit": "Unit-3",
+  "service": "Hydrogen recycle",
+  "manufacturer": "Burckhardt",
+  "model": "RC-900",
+  "installed": "2019-06-20",
+  "criticality": "High",
+  "access": {
+    "department": "maintenance",
+    "unit": "unit-1",
+    "min_clearance": 2,
+    "sensitivity": "internal"
+  },
+  "governed_by": [
+    "OISD-STD-106"
+  ]
+}

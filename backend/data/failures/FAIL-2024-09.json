@@ -1,0 +1,18 @@
+{
+  "id": "FAIL-2024-09",
+  "equipment_id": "C-302",
+  "title": "C-302 Air Compressor Trip",
+  "date": "2024-10-02",
+  "severity": "Low",
+  "downtime_hours": 3,
+  "access": {
+    "department": "maintenance",
+    "unit": "unit-1",
+    "min_clearance": 2,
+    "sensitivity": "internal"
+  },
+  "failure_mode": "High temperature trip",
+  "immediate_cause": "Fouled aftercooler.",
+  "description": "Instrument air compressor C-302 tripped on discharge temperature due to a fouled aftercooler. Cleaned and restored.",
+  "root_cause": "Aftercooler fouling."
+}

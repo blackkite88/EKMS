@@ -1,0 +1,17 @@
+{
+  "id": "WO-2118",
+  "equipment_id": "T-502",
+  "title": "T-502 Level Gauge Calibration",
+  "type": "Preventive",
+  "priority": "Medium",
+  "status": "Completed",
+  "date": "2025-01-12",
+  "technician": "Ops Team",
+  "access": {
+    "department": "operations",
+    "unit": "unit-2",
+    "min_clearance": 1,
+    "sensitivity": "public"
+  },
+  "description": "T-502 Level Gauge Calibration for T-502."
+}

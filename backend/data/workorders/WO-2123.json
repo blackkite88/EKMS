@@ -1,0 +1,17 @@
+{
+  "id": "WO-2123",
+  "equipment_id": "P-220",
+  "title": "P-220 Overhaul",
+  "type": "Corrective",
+  "priority": "Medium",
+  "status": "In Progress",
+  "date": "2025-03-15",
+  "technician": "P. Nair",
+  "access": {
+    "department": "maintenance",
+    "unit": "unit-1",
+    "min_clearance": 2,
+    "sensitivity": "internal"
+  },
+  "description": "P-220 Overhaul for P-220."
+}

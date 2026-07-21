@@ -1,0 +1,17 @@
+{
+  "id": "WO-2114",
+  "equipment_id": "HX-401",
+  "title": "HX-401 Thickness Survey Prep",
+  "type": "Preventive",
+  "priority": "Medium",
+  "status": "Completed",
+  "date": "2024-09-15",
+  "technician": "QA Team",
+  "access": {
+    "department": "engineering",
+    "unit": "unit-2",
+    "min_clearance": 4,
+    "sensitivity": "internal"
+  },
+  "description": "HX-401 Thickness Survey Prep for HX-401."
+}

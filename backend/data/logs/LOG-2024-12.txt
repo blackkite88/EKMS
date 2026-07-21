@@ -1,0 +1,10 @@
+---
+access:
+  department: operations
+  unit: unit-2
+  min_clearance: 1
+  sensitivity: public
+---
+Operating Log Summary — Unit-4 — December 2024
+
+K-401 vibration alarm 2024-12-30, coupling rebalanced. Related: K-401, FAIL-2024-12.

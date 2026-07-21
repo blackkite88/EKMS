@@ -1,0 +1,31 @@
+{
+  "id": "FAIL-2023-07",
+  "equipment_id": "P-102",
+  "title": "P-102 Bearing Failure (2023)",
+  "date": "2023-08-05",
+  "severity": "High",
+  "downtime_hours": 11,
+  "access": {
+    "department": "maintenance",
+    "unit": "unit-2",
+    "min_clearance": 2,
+    "sensitivity": "internal"
+  },
+  "failure_mode": "Bearing failure",
+  "immediate_cause": "Drive-end bearing failure following seal replacement.",
+  "description": "Standby crude pump P-102 suffered a bearing failure two months after a mechanical seal replacement. Investigation concluded the shaft was left misaligned after the seal job. Corrective action raised: update SOP-SEAL-REPL to mandate alignment verification. This action was recorded but never closed out — the SOP was not updated, setting up the later P-101 failure (FAIL-2025-03).",
+  "contributing_factors": [
+    "Shaft misalignment after seal replacement"
+  ],
+  "root_cause": "Misalignment after seal replacement; SOP lacked an alignment-verification step.",
+  "corrective_action": "Update SOP-SEAL-REPL (NOT COMPLETED)",
+  "related_manuals": [
+    "MAN-KSB-RPH200"
+  ],
+  "related_procedures": [
+    "SOP-SEAL-REPL"
+  ],
+  "similar_to": [
+    "FAIL-2025-03"
+  ]
+}

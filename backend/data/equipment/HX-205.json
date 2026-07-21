@@ -1,0 +1,21 @@
+{
+  "id": "HX-205",
+  "name": "Crude Preheat Exchanger HX-205",
+  "type": "Shell & Tube Heat Exchanger",
+  "unit": "Unit-2",
+  "service": "Crude/product heat exchange",
+  "manufacturer": "Alfa Laval",
+  "model": "STX-4000",
+  "installed": "2017-11-01",
+  "criticality": "Medium",
+  "access": {
+    "department": "maintenance",
+    "unit": "unit-2",
+    "min_clearance": 2,
+    "sensitivity": "internal"
+  },
+  "description": "Shell-and-tube preheat exchanger. Subject to thickness monitoring per OISD-STD-130.",
+  "governed_by": [
+    "OISD-STD-130"
+  ]
+}

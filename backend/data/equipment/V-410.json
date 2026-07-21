@@ -1,0 +1,23 @@
+{
+  "id": "V-410",
+  "name": "HP Separator Vessel V-410",
+  "type": "Pressure Vessel",
+  "unit": "Unit-4",
+  "service": "High-pressure separation",
+  "manufacturer": "L&T",
+  "model": "PV-HP-410",
+  "installed": "2016-09-15",
+  "design_pressure_barg": 85,
+  "criticality": "High",
+  "access": {
+    "department": "engineering",
+    "unit": "unit-2",
+    "min_clearance": 4,
+    "sensitivity": "internal"
+  },
+  "description": "High-pressure separator. Subject to PESO hydrotest every 4 years and OISD-STD-105 internal inspection.",
+  "governed_by": [
+    "PESO-SMPV-2016",
+    "OISD-STD-105"
+  ]
+}

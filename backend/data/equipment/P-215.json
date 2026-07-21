@@ -1,0 +1,20 @@
+{
+  "id": "P-215",
+  "name": "Bottoms Pump P-215",
+  "type": "Centrifugal Pump",
+  "unit": "Unit-2",
+  "service": "Column bottoms",
+  "manufacturer": "Flowserve",
+  "model": "FS-300",
+  "installed": "2019-02-14",
+  "criticality": "Medium",
+  "access": {
+    "department": "maintenance",
+    "unit": "unit-2",
+    "min_clearance": 2,
+    "sensitivity": "internal"
+  },
+  "governed_by": [
+    "OISD-STD-106"
+  ]
+}

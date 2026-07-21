@@ -1,0 +1,10 @@
+---
+access:
+  department: operations
+  unit: unit-2
+  min_clearance: 1
+  sensitivity: public
+---
+Operating Log Summary — Unit-2 — February 2025
+
+P-101 returned to service 2025-02-10 after seal replacement (WO-2041). Flow trending high (230-240 m3/h). Vibration inspection INS-311 taken 2025-02-14. Related: P-101, WO-2041, INS-311.

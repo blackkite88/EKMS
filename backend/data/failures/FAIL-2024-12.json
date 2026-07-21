@@ -1,0 +1,21 @@
+{
+  "id": "FAIL-2024-12",
+  "equipment_id": "K-401",
+  "title": "K-401 Vibration Alarm",
+  "date": "2024-12-30",
+  "severity": "Medium",
+  "downtime_hours": 0,
+  "access": {
+    "department": "engineering",
+    "unit": "unit-2",
+    "min_clearance": 4,
+    "sensitivity": "internal"
+  },
+  "failure_mode": "High vibration",
+  "immediate_cause": "Coupling imbalance.",
+  "description": "Makeup gas compressor K-401 vibration alarm. Coupling rebalanced under WO-2610.",
+  "root_cause": "Coupling imbalance.",
+  "related_workorders": [
+    "WO-2610"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "id": "WO-2120",
+  "equipment_id": "P-210",
+  "title": "P-210 Alignment Check",
+  "type": "Preventive",
+  "priority": "Medium",
+  "status": "Open",
+  "date": "2025-03-28",
+  "technician": "S. Iyer",
+  "access": {
+    "department": "maintenance",
+    "unit": "unit-2",
+    "min_clearance": 2,
+    "sensitivity": "internal"
+  },
+  "description": "P-210 Alignment Check for P-210."
+}

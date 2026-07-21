@@ -1,0 +1,15 @@
+---
+access:
+  department: operations
+  unit: unit-2
+  min_clearance: 1
+  sensitivity: public
+---
+Operating Log Summary — Unit-2 — March 2025
+
+P-101 Crude Feed Pump:
+- Avg flow: 238 m3/h (rated 220 m3/h) — running ~8% ABOVE rated flow through early March
+- Discharge pressure: normal
+- 2025-03-18 03:12 — TRIP on high vibration + motor overload. Bearing seizure (FAIL-2025-03).
+
+Note: sustained operation above rated flow contributed to bearing loading. Related: P-101, FAIL-2025-03.
