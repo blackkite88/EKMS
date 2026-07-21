@@ -18,7 +18,7 @@ export function looksLikeRefusal(text) {
 }
 
 export function hasCitation(text) {
-  return /\[(EMAIL|TICKET|MEETING|DOC|PR)\s*\|/i.test(text || '');
+  return /\[(EQUIPMENT|WO|INSPECTION|FAILURE|MANUAL|PROCEDURE|REGULATION|LOG)\s*\|/i.test(text || '');
 }
 
 // Deterministic access-correctness check.

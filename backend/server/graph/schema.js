@@ -1,80 +1,99 @@
 // The knowledge-graph schema: node labels, relationship types, and helpers.
 //
 // Two tiers of nodes:
-//   Tier 1 — Artifacts (the evidence): Email, Ticket, Meeting, PR, Doc
-//   Tier 2 — Concepts (the meaning):   Person, Project, Decision, Incident
+//   Tier 1 — Artifacts (evidence): WorkOrder, Inspection, FailureReport,
+//            Manual, Procedure, Regulation, OperatingLog
+//   Tier 2 — Concepts (meaning):   Equipment (the central hub), FailureMode,
+//            Person, Unit
 //
-// The concept tier is what turns "what is connected to what" into "why" — a
-// Decision/Incident node is the anchor a causal query resolves to, with
-// artifacts hanging off it as evidence.
+// The concept tier is what turns "what is connected to what" into "why" — an
+// Equipment/FailureMode node is the anchor a root-cause query resolves to, with
+// artifacts (work orders, inspections, manuals) hanging off it as evidence.
 
 export const NODE_LABELS = {
   // Artifacts
-  EMAIL: 'Email',
-  TICKET: 'Ticket',
-  MEETING: 'Meeting',
-  PR: 'PR',
-  DOC: 'Doc',
+  WORK_ORDER: 'WorkOrder',
+  INSPECTION: 'Inspection',
+  FAILURE: 'FailureReport',
+  MANUAL: 'Manual',
+  PROCEDURE: 'Procedure',
+  REGULATION: 'Regulation',
+  LOG: 'OperatingLog',
   // Concepts
+  EQUIPMENT: 'Equipment',
+  FAILURE_MODE: 'FailureMode',
   PERSON: 'Person',
-  PROJECT: 'Project',
-  DECISION: 'Decision',
-  INCIDENT: 'Incident',
+  UNIT: 'Unit',
 };
 
 export const ARTIFACT_LABELS = [
-  NODE_LABELS.EMAIL,
-  NODE_LABELS.TICKET,
-  NODE_LABELS.MEETING,
-  NODE_LABELS.PR,
-  NODE_LABELS.DOC,
+  NODE_LABELS.WORK_ORDER,
+  NODE_LABELS.INSPECTION,
+  NODE_LABELS.FAILURE,
+  NODE_LABELS.MANUAL,
+  NODE_LABELS.PROCEDURE,
+  NODE_LABELS.REGULATION,
+  NODE_LABELS.LOG,
 ];
 
 export const RELATIONSHIPS = {
   // Structural (reliable backbone from explicit cross-references)
-  REFERENCES: 'REFERENCES',
-  AUTHORED_BY: 'AUTHORED_BY',
-  ABOUT: 'ABOUT',
-  ATTENDED: 'ATTENDED',
-  // Causal / semantic (the reasoning layer)
-  CAUSED: 'CAUSED',
-  BLOCKS: 'BLOCKS',
-  LED_TO: 'LED_TO',
-  APPROVED: 'APPROVED',
-  EVIDENCES: 'EVIDENCES',
-  RESULTED_FROM: 'RESULTED_FROM',
+  PERFORMED_ON: 'PERFORMED_ON', // WorkOrder → Equipment
+  INSPECTED: 'INSPECTED', // Inspection → Equipment
+  OCCURRED_ON: 'OCCURRED_ON', // FailureReport → Equipment
+  COVERS: 'COVERS', // Manual → Equipment
+  APPLIES_TO: 'APPLIES_TO', // Procedure → Equipment
+  GOVERNS: 'GOVERNS', // Regulation → Equipment/Procedure
+  PART_OF: 'PART_OF', // Equipment → Unit
+  EXECUTED_BY: 'EXECUTED_BY', // WorkOrder → Person
+  REFERENCES: 'REFERENCES', // generic artifact → artifact
+  // Causal / semantic (the reasoning layer — RCA lives here)
+  CAUSED_BY: 'CAUSED_BY', // FailureReport → cause artifact
+  CONTRIBUTED_TO: 'CONTRIBUTED_TO', // artifact → FailureReport
+  PRECEDED: 'PRECEDED', // Inspection/log → FailureReport
+  HAS_MODE: 'HAS_MODE', // FailureReport → FailureMode
+  SIMILAR_TO: 'SIMILAR_TO', // FailureReport ↔ FailureReport (lessons learned)
 };
 
-// Map a data/ source_type to its artifact node label.
+// Map a data/ source_type (folder name) to its artifact node label.
 export function sourceTypeToLabel(sourceType) {
   switch (sourceType) {
-    case 'emails': return NODE_LABELS.EMAIL;
-    case 'tickets': return NODE_LABELS.TICKET;
-    case 'meetings': return NODE_LABELS.MEETING;
-    case 'github': return NODE_LABELS.PR;
-    case 'docs': return NODE_LABELS.DOC;
-    default: return NODE_LABELS.DOC;
+    case 'workorders': return NODE_LABELS.WORK_ORDER;
+    case 'inspections': return NODE_LABELS.INSPECTION;
+    case 'failures': return NODE_LABELS.FAILURE;
+    case 'manuals': return NODE_LABELS.MANUAL;
+    case 'procedures': return NODE_LABELS.PROCEDURE;
+    case 'regulations': return NODE_LABELS.REGULATION;
+    case 'logs': return NODE_LABELS.LOG;
+    case 'equipment': return NODE_LABELS.EQUIPMENT;
+    default: return NODE_LABELS.MANUAL;
   }
 }
 
-// Map an artifact label back to the citation tag used in answers, e.g. Email → EMAIL.
+// Map a node label to the citation tag used in answers, e.g. WorkOrder → WO.
 export function labelToCitationTag(label) {
   switch (label) {
-    case NODE_LABELS.EMAIL: return 'EMAIL';
-    case NODE_LABELS.TICKET: return 'TICKET';
-    case NODE_LABELS.MEETING: return 'MEETING';
-    case NODE_LABELS.PR: return 'PR';
-    case NODE_LABELS.DOC: return 'DOC';
+    case NODE_LABELS.WORK_ORDER: return 'WO';
+    case NODE_LABELS.INSPECTION: return 'INSPECTION';
+    case NODE_LABELS.FAILURE: return 'FAILURE';
+    case NODE_LABELS.MANUAL: return 'MANUAL';
+    case NODE_LABELS.PROCEDURE: return 'PROCEDURE';
+    case NODE_LABELS.REGULATION: return 'REGULATION';
+    case NODE_LABELS.LOG: return 'LOG';
+    case NODE_LABELS.EQUIPMENT: return 'EQUIPMENT';
     default: return label.toUpperCase();
   }
 }
+
+// The citation tags that correspond to real source documents (for the copilot's
+// citation chips and the source-document viewer).
+export const CITABLE_TAGS = ['WO', 'INSPECTION', 'FAILURE', 'MANUAL', 'PROCEDURE', 'REGULATION', 'LOG', 'EQUIPMENT'];
 
 // The Cypher constraints/indexes to create once at build time.
 export const SCHEMA_STATEMENTS = [
   'CREATE CONSTRAINT node_id_unique IF NOT EXISTS FOR (n:Node) REQUIRE n.id IS UNIQUE',
 ];
 
-// Because we use a shared :Node label plus a specific label on every node, we
-// can enforce a single uniqueness constraint on id. Nodes are created with both
-// labels, e.g. (:Node:Email { id: "email_02" }).
+// Every node carries a shared :Node label (for the single uniqueness constraint
+// on id) plus its specific label, e.g. (:Node:Equipment { id: "P-101" }).
 export const SHARED_LABEL = 'Node';

@@ -19,7 +19,7 @@ import { writeAudit } from '../middleware/auditLogger.js';
 import { createLogger } from '../utils/logger.js';
 
 const log = createLogger('orchestrator');
-const CITATION_RE = /\[(EMAIL|TICKET|MEETING|DOC|PR)\s*\|\s*([^\]]+)\]/gi;
+const CITATION_RE = /\[(EQUIPMENT|WO|INSPECTION|FAILURE|MANUAL|PROCEDURE|REGULATION|LOG)\s*\|\s*([^\]]+)\]/gi;
 
 function accumulateToolDeltas(store, delta) {
   if (!delta.tool_calls) return;
