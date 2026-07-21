@@ -7,4 +7,8 @@ access:
 ---
 # SOP-CONFINED
 
-Confined space entry procedure for vessels and tanks.
+**Applies to:** V-410, V-411, V-420, T-501, per FACTORY-ACT-H
+
+Confined space entry procedure for vessels V-410, V-411, V-420 and tank T-501, per FACTORY-ACT-H.
+
+**Related:** V-410, V-411, V-420, T-501, per FACTORY-ACT-H

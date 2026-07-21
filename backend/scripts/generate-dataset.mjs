@@ -210,21 +210,23 @@ const procedures = [
   { id:'SOP-VIB-MON', access:AC.maintPub, body:`# SOP-VIB-MON — Vibration Monitoring\n\n**Per:** OISD-STD-106\n\n## Requirement\nRotating equipment in hydrocarbon service shall have vibration readings taken every 3 months. Readings exceeding alarm thresholds MUST be escalated to maintenance engineering within 24 hours.\n\n**Related:** OISD-STD-106, INS-311` },
   { id:'SOP-PSV-TEST', access:AC.maintPub, body:`# SOP-PSV-TEST — Pressure Relief Valve Testing\n\nTest PSV set pressure annually per OISD-STD-105. Overhaul any valve found passing.\n\n**Related:** OISD-STD-105, V-411` },
 ];
+// Each filler SOP now cites the specific equipment/regulation it applies to, so
+// the extractor connects it (no orphans). Format: [id, appliesTo(tags/reg), text]
 const procFiller = [
-  ['SOP-LOTO','Lockout/Tagout procedure for isolating equipment before maintenance.'],
-  ['SOP-HOTWORK','Hot work permit procedure per Factory Act safety requirements.'],
-  ['SOP-CONFINED','Confined space entry procedure for vessels and tanks.'],
-  ['SOP-THICKNESS','Ultrasonic thickness survey procedure per OISD-STD-130.'],
-  ['SOP-HYDROTEST','Pressure vessel hydrotest procedure per PESO SMPV Rules.'],
-  ['SOP-ALIGN','Shaft alignment procedure using laser alignment tools.'],
-  ['SOP-LUBE','Lubrication schedule and procedure for rotating equipment.'],
-  ['SOP-TANK-INSP','Storage tank inspection procedure per OISD-STD-129.'],
-  ['SOP-BURNER','Fired heater burner cleaning and inspection procedure.'],
-  ['SOP-COMPRESSOR','Reciprocating compressor valve inspection procedure.'],
-  ['SOP-EMERGENCY','Emergency shutdown procedure for Unit-2.'],
+  ['SOP-LOTO','P-101, P-102, HX-205, V-410, per FACTORY-ACT-M','Lockout/Tagout procedure for isolating equipment (e.g. P-101, P-102, HX-205, V-410) before maintenance. Required by FACTORY-ACT-M.'],
+  ['SOP-HOTWORK','F-101, per FACTORY-ACT-H','Hot work permit procedure for equipment such as fired heater F-101, per FACTORY-ACT-H safety requirements.'],
+  ['SOP-CONFINED','V-410, V-411, V-420, T-501, per FACTORY-ACT-H','Confined space entry procedure for vessels V-410, V-411, V-420 and tank T-501, per FACTORY-ACT-H.'],
+  ['SOP-THICKNESS','HX-205, HX-208, HX-401, per OISD-STD-130','Ultrasonic thickness survey procedure for exchangers HX-205, HX-208, HX-401 per OISD-STD-130.'],
+  ['SOP-HYDROTEST','V-410, V-411, V-420, per PESO-SMPV-2016','Pressure vessel hydrotest procedure for V-410, V-411, V-420 per PESO-SMPV-2016 SMPV Rules.'],
+  ['SOP-ALIGN','P-101, P-102, P-210, P-215, P-230','Shaft alignment procedure for pumps P-101, P-102, P-210, P-215, P-230 using laser alignment tools. Referenced by SOP-SEAL-REPL.'],
+  ['SOP-LUBE','P-101, P-210, P-215, K-401','Lubrication schedule and procedure for rotating equipment P-101, P-210, P-215, K-401.'],
+  ['SOP-TANK-INSP','T-501, T-502, per OISD-STD-129','Storage tank inspection procedure for T-501, T-502 per OISD-STD-129.'],
+  ['SOP-BURNER','F-101, per OISD-STD-113','Fired heater burner cleaning and inspection procedure for F-101 per OISD-STD-113.'],
+  ['SOP-COMPRESSOR','C-301, K-401','Reciprocating/centrifugal compressor valve inspection procedure for C-301, K-401.'],
+  ['SOP-EMERGENCY','F-101, P-101, per FACTORY-ACT-H','Emergency shutdown procedure for Unit-2 (F-101, P-101) per FACTORY-ACT-H.'],
 ];
-for (const [id,txt] of procFiller)
-  procedures.push({ id, access:AC.maintPub, body:`# ${id}\n\n${txt}` });
+for (const [id,appliesTo,txt] of procFiller)
+  procedures.push({ id, access:AC.maintPub, body:`# ${id}\n\n**Applies to:** ${appliesTo}\n\n${txt}\n\n**Related:** ${appliesTo}` });
 for (const p of procedures) wm('procedures', `${p.id}.md`, p.access, p.body);
 console.log('procedures:', procedures.length);
 
@@ -238,10 +240,10 @@ const regulations = [
   { id:'OISD-STD-130', access:AC.reg, body:`# OISD-STD-130 — Inspection of Heat Exchangers & Piping\n\n## Requirement\nHeat exchangers subject to periodic ultrasonic thickness monitoring; tubes retired below minimum thickness.\n\n**Governs:** HX-205, HX-208, HX-401` },
   { id:'OISD-STD-129', access:AC.reg, body:`# OISD-STD-129 — Inspection of Storage Tanks\n\n## Requirement\nStorage tanks subject to periodic settlement surveys and integrity inspection.\n\n**Governs:** T-501, T-502` },
   { id:'OISD-STD-113', access:AC.reg, body:`# OISD-STD-113 — Fired Heaters\n\n## Requirement\nFired heaters subject to tube skin temperature monitoring and periodic thermographic survey.\n\n**Governs:** F-101` },
-  { id:'FACTORY-ACT-M', access:AC.reg, body:`# Factory Act, 1948 — Maintenance & Safety (excerpted)\n\n## Requirement\nEmployers shall maintain plant and machinery in a safe condition and keep records of maintenance and inspection. Hazardous work requires documented safe systems of work.\n\n**Applies to:** all equipment` },
-  { id:'FACTORY-ACT-H', access:AC.reg, body:`# Factory Act, 1948 — Hazardous Processes (excerpted)\n\n## Requirement\nHazardous processes require worker safety measures, emergency procedures, and incident reporting.\n\n**Applies to:** Unit-2, Unit-4` },
-  { id:'OISD-STD-116', access:AC.reg, body:`# OISD-STD-116 — Fire Protection Facilities\n\n## Requirement\nProcess units shall maintain fire protection systems and conduct periodic testing.\n\n**Applies to:** all units` },
-  { id:'OISD-GDN-178', access:AC.reg, body:`# OISD-GDN-178 — Risk Based Inspection\n\n## Guidance\nInspection intervals may be optimised using risk-based methodology considering criticality and damage mechanisms.\n\n**Applies to:** all equipment` },
+  { id:'FACTORY-ACT-M', access:AC.reg, body:`# Factory Act, 1948 — Maintenance & Safety (excerpted)\n\n## Requirement\nEmployers shall maintain plant and machinery (e.g. P-101, HX-205, V-410) in a safe condition and keep records of maintenance and inspection. Hazardous work requires documented safe systems of work.\n\n**Applies to:** P-101, HX-205, V-410, F-101 (all equipment)` },
+  { id:'FACTORY-ACT-H', access:AC.reg, body:`# Factory Act, 1948 — Hazardous Processes (excerpted)\n\n## Requirement\nHazardous processes require worker safety measures, emergency procedures, and incident reporting for units handling hydrocarbons such as F-101, V-410, V-420.\n\n**Applies to:** F-101, V-410, V-420 (Unit-2, Unit-4)` },
+  { id:'OISD-STD-116', access:AC.reg, body:`# OISD-STD-116 — Fire Protection Facilities\n\n## Requirement\nProcess units shall maintain fire protection systems and conduct periodic testing, including around fired heater F-101 and pumps P-101, P-102.\n\n**Applies to:** F-101, P-101, P-102 (all units)` },
+  { id:'OISD-GDN-178', access:AC.reg, body:`# OISD-GDN-178 — Risk Based Inspection\n\n## Guidance\nInspection intervals may be optimised using risk-based methodology considering criticality and damage mechanisms for equipment such as V-410, HX-205, P-101.\n\n**Applies to:** V-410, HX-205, P-101 (all equipment)` },
 ];
 for (const r of regulations) wm('regulations', `${r.id}.md`, r.access, r.body);
 console.log('regulations:', regulations.length);

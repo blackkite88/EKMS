@@ -7,4 +7,8 @@ access:
 ---
 # SOP-TANK-INSP
 
-Storage tank inspection procedure per OISD-STD-129.
+**Applies to:** T-501, T-502, per OISD-STD-129
+
+Storage tank inspection procedure for T-501, T-502 per OISD-STD-129.
+
+**Related:** T-501, T-502, per OISD-STD-129

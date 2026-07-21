@@ -7,4 +7,8 @@ access:
 ---
 # SOP-BURNER
 
-Fired heater burner cleaning and inspection procedure.
+**Applies to:** F-101, per OISD-STD-113
+
+Fired heater burner cleaning and inspection procedure for F-101 per OISD-STD-113.
+
+**Related:** F-101, per OISD-STD-113

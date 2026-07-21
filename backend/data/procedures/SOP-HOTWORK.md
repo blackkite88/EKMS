@@ -7,4 +7,8 @@ access:
 ---
 # SOP-HOTWORK
 
-Hot work permit procedure per Factory Act safety requirements.
+**Applies to:** F-101, per FACTORY-ACT-H
+
+Hot work permit procedure for equipment such as fired heater F-101, per FACTORY-ACT-H safety requirements.
+
+**Related:** F-101, per FACTORY-ACT-H

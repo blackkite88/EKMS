@@ -7,4 +7,8 @@ access:
 ---
 # SOP-ALIGN
 
-Shaft alignment procedure using laser alignment tools.
+**Applies to:** P-101, P-102, P-210, P-215, P-230
+
+Shaft alignment procedure for pumps P-101, P-102, P-210, P-215, P-230 using laser alignment tools. Referenced by SOP-SEAL-REPL.
+
+**Related:** P-101, P-102, P-210, P-215, P-230

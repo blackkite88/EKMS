@@ -7,4 +7,8 @@ access:
 ---
 # SOP-LUBE
 
-Lubrication schedule and procedure for rotating equipment.
+**Applies to:** P-101, P-210, P-215, K-401
+
+Lubrication schedule and procedure for rotating equipment P-101, P-210, P-215, K-401.
+
+**Related:** P-101, P-210, P-215, K-401

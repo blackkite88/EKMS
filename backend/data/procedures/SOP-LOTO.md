@@ -7,4 +7,8 @@ access:
 ---
 # SOP-LOTO
 
-Lockout/Tagout procedure for isolating equipment before maintenance.
+**Applies to:** P-101, P-102, HX-205, V-410, per FACTORY-ACT-M
+
+Lockout/Tagout procedure for isolating equipment (e.g. P-101, P-102, HX-205, V-410) before maintenance. Required by FACTORY-ACT-M.
+
+**Related:** P-101, P-102, HX-205, V-410, per FACTORY-ACT-M

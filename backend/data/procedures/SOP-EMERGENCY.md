@@ -7,4 +7,8 @@ access:
 ---
 # SOP-EMERGENCY
 
-Emergency shutdown procedure for Unit-2.
+**Applies to:** F-101, P-101, per FACTORY-ACT-H
+
+Emergency shutdown procedure for Unit-2 (F-101, P-101) per FACTORY-ACT-H.
+
+**Related:** F-101, P-101, per FACTORY-ACT-H
