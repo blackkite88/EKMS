@@ -19,8 +19,8 @@ function tokenize(text) {
 
 function rehydrateAccess(meta) {
   return {
-    department: meta.access_department || 'general',
-    projects: meta.access_projects ? String(meta.access_projects).split(',').filter(Boolean) : [],
+    department: meta.access_department || 'operations',
+    unit: meta.access_unit || 'all',
     min_clearance: typeof meta.access_min_clearance === 'number' ? meta.access_min_clearance : 1,
     sensitivity: meta.access_sensitivity || 'public',
   };

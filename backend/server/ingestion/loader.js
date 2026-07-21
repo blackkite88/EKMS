@@ -20,7 +20,7 @@ const BATCH_SIZE = 50;
 function flattenAccess(access) {
   return {
     access_department: access.department,
-    access_projects: (access.projects || []).join(','),
+    access_unit: access.unit || 'all',
     access_min_clearance: access.min_clearance,
     access_sensitivity: access.sensitivity,
   };

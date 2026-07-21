@@ -1,15 +1,35 @@
 // The ABAC policy engine. Access rules are declared as DATA (a list of policy
 // objects), not hardcoded conditionals — the model used by real systems like
 // AWS IAM and Open Policy Agent. Every access decision in the system (vector
-// retrieval, graph traversal, the /graph backdrop, the eval harness) flows
-// through the single canAccess() function, so there is exactly one place that
-// decides "who can see what".
+// retrieval, graph traversal, the /graph backdrop, action outputs, the eval
+// harness) flows through the single canAccess() function.
+//
+// Industrial model:
+//   - clearance gates sensitivity (higher clearance → more sensitive docs)
+//   - department read-hierarchy: senior functions can read the operational
+//     data of the functions they oversee (a reliability engineer must be able
+//     to read maintenance failure records to do RCA), but not vice versa
+//   - restricted safety-incident material requires top clearance (5)
 import { normalizeUserAttributes, normalizeResourceAccess, SENSITIVITY } from './attributes.js';
 
-// A policy is { id, description, effect, when(user, resource) -> boolean }.
-// Semantics: access is GRANTED only if ALL "allow" policies pass. Any single
-// failing policy denies access (logical AND of allow-conditions). This makes
-// the rules composable and easy to reason about.
+// Which resource-departments a user-department is allowed to READ.
+// A field operator sees only operations; a technician sees maintenance +
+// operations; a reliability engineer sees engineering + maintenance +
+// operations; a plant manager / safety lead sees everything.
+const DEPARTMENT_READ_SCOPE = {
+  operations: ['operations', 'compliance'],
+  maintenance: ['maintenance', 'operations', 'compliance'],
+  engineering: ['engineering', 'maintenance', 'operations', 'compliance'],
+  safety: ['safety', 'engineering', 'maintenance', 'operations', 'compliance'],
+  management: ['management', 'safety', 'engineering', 'maintenance', 'operations', 'compliance'],
+};
+
+function canReadDepartment(userDept, resourceDept) {
+  if (userDept === 'management' || userDept === 'executive') return true;
+  const scope = DEPARTMENT_READ_SCOPE[userDept] || [userDept];
+  return scope.includes(resourceDept);
+}
+
 export const POLICIES = [
   {
     id: 'clearance-floor',
@@ -17,23 +37,19 @@ export const POLICIES = [
     when: (user, resource) => user.clearance >= resource.min_clearance,
   },
   {
-    id: 'department-scope',
+    id: 'department-read-scope',
     description:
-      'Resource must be public, OR belong to the user\'s department, OR the user is an executive (cross-department).',
+      'Resource must be public, OR fall within the departments the user\'s function is allowed to read (e.g. a reliability engineer can read maintenance records).',
     when: (user, resource) =>
       resource.sensitivity === SENSITIVITY.PUBLIC ||
-      user.department === resource.department ||
-      user.department === 'executive',
+      canReadDepartment(user.department, resource.department),
   },
   {
-    id: 'project-scope',
+    id: 'restricted-requires-top-clearance',
     description:
-      'If the resource is scoped to projects, the user must share at least one project — UNLESS the resource is public, or the user holds top clearance (>=5).',
+      'Restricted material (e.g. safety-incident investigations) requires top clearance (level 5).',
     when: (user, resource) =>
-      resource.sensitivity === SENSITIVITY.PUBLIC ||
-      resource.projects.length === 0 ||
-      user.clearance >= 5 ||
-      resource.projects.some((p) => user.projects.includes(p)),
+      resource.sensitivity !== SENSITIVITY.RESTRICTED || user.clearance >= 5,
   },
 ];
 
@@ -55,9 +71,7 @@ export function canAccess(userAttrs, resourceAccess) {
   return evaluate(userAttrs, resourceAccess).allowed;
 }
 
-// Partition a list of items (each carrying an `access` field, or a metadata
-// object) into { allowed, denied } for a given user. `getAccess` extracts the
-// access attributes from an item.
+// Partition a list of items into { allowed, denied } for a given user.
 export function partitionByAccess(userAttrs, items, getAccess = (i) => i.access) {
   const allowed = [];
   const denied = [];

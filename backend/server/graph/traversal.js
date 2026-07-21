@@ -22,8 +22,8 @@ const DEFAULT_MAX_NODES = 25;
 // Extract ABAC access attributes from a Neo4j node's flat properties.
 function nodeAccess(props) {
   return {
-    department: props.access_department || 'general',
-    projects: Array.isArray(props.access_projects) ? props.access_projects : [],
+    department: props.access_department || 'operations',
+    unit: props.access_unit || 'all',
     min_clearance: typeof props.access_min_clearance === 'number'
       ? props.access_min_clearance
       : (props.access_min_clearance?.toNumber?.() ?? 1),

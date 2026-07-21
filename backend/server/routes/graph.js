@@ -13,8 +13,8 @@ const router = Router();
 
 function nodeAccess(props) {
   return {
-    department: props.access_department || 'general',
-    projects: Array.isArray(props.access_projects) ? props.access_projects : [],
+    department: props.access_department || 'operations',
+    unit: props.access_unit || 'all',
     min_clearance:
       typeof props.access_min_clearance === 'number'
         ? props.access_min_clearance

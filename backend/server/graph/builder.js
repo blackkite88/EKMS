@@ -26,8 +26,8 @@ async function ensureSchema() {
 function accessProps(access) {
   if (!access) return {};
   return {
-    access_department: access.department || 'general',
-    access_projects: access.projects || [],
+    access_department: access.department || 'operations',
+    access_unit: access.unit || 'all',
     access_min_clearance: Number.isInteger(access.min_clearance) ? access.min_clearance : 1,
     access_sensitivity: access.sensitivity || 'public',
   };
