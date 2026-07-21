@@ -142,6 +142,13 @@ export async function runQuery({ query: message, user, sessionId, stream }) {
       log.warn(`RCA gather failed: ${err.message}`);
     }
     stream.contextAssembled(retrieval.results.length);
+    // An RCA needs the causal subgraph. If the graph is empty because the user's
+    // access blocked the failure records (blockedCount > 0), degrade to an
+    // access-limited message rather than assembling a partial RCA from whatever
+    // public fragments retrieval happened to surface.
+    if (graph.nodes.length === 0 && (graph.blockedCount > 0 || retrieval.deniedCount > 0)) {
+      return finishEmpty(stream, sessionId, user, message, graph, retrieval, startedAt);
+    }
     if (retrieval.results.length === 0 && graph.nodes.length === 0) {
       return finishEmpty(stream, sessionId, user, message, graph, retrieval, startedAt);
     }
