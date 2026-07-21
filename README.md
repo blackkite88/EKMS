@@ -26,11 +26,12 @@ npm start               # API on http://localhost:3001
 **2. Frontend** (in a second terminal):
 ```bash
 cd frontend
+cp .env.example .env.local   # points the UI at the backend (localhost:3001)
 npm install
-npm run dev              # UI on http://localhost:3000
+npm run dev                  # UI on http://localhost:3000
 ```
 
-The frontend expects the backend running on `localhost:3001` — see [`frontend/README.md`](frontend/README.md) once wired up.
+Open http://localhost:3000 and sign in as any demo user (password: `demo`). The frontend expects the backend running on `localhost:3001` — see [`frontend/README.md`](frontend/README.md) for details.
 
 ## Documentation
 
