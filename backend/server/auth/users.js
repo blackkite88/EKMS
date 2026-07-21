@@ -1,9 +1,9 @@
 // Preset demo users, seeded into Postgres on startup. No signup flow — these
-// fixed identities let us switch users instantly during the demo to show ABAC.
-// The attribute profiles are designed for dramatic contrast: note that
-// `engineer@nexora` is a real cleared engineer but is NOT on the payments
-// project, so they cannot see payments-confidential content — the ABAC
-// "it's not just seniority" moment.
+// fixed plant-role identities let us switch users instantly during the demo to
+// show role-based access AND action permissions. Attribute profiles are
+// designed for contrast: a field operator can ask questions but cannot see
+// maintenance failure records or create work orders; a reliability engineer
+// can do RCA; a plant manager sees everything including safety incidents.
 import bcrypt from 'bcryptjs';
 import { query } from '../config/postgres.js';
 import { createLogger } from '../utils/logger.js';
@@ -12,49 +12,49 @@ const log = createLogger('users');
 
 export const DEMO_USERS = [
   {
-    email: 'cto@nexora.com',
-    name: 'Raj Patel',
-    title: 'Chief Technology Officer',
+    email: 'manager@bpi.com',
+    name: 'Anita Deshmukh',
+    title: 'Plant Manager',
     password: 'demo',
-    department: 'executive',
+    department: 'management',
     clearance: 5,
-    projects: ['payments', 'search', 'infra', 'security', 'mobile'],
+    unit: 'all',
   },
   {
-    email: 'security@nexora.com',
-    name: 'Kenji Nakamura',
-    title: 'Security Lead',
+    email: 'safety@bpi.com',
+    name: 'Vikram Rao',
+    title: 'Safety Lead',
     password: 'demo',
-    department: 'security',
+    department: 'safety',
     clearance: 5,
-    projects: ['security', 'payments', 'infra'],
+    unit: 'all',
   },
   {
-    email: 'eng.lead@nexora.com',
-    name: 'Priya Sharma',
-    title: 'Engineering Manager',
+    email: 'reliability@bpi.com',
+    name: 'Meera Krishnan',
+    title: 'Reliability Engineer',
     password: 'demo',
     department: 'engineering',
     clearance: 4,
-    projects: ['payments', 'infra'],
+    unit: 'unit-2',
   },
   {
-    email: 'engineer@nexora.com',
-    name: 'Riya Desai',
-    title: 'Software Engineer (Search)',
+    email: 'technician@bpi.com',
+    name: 'Ravi Kulkarni',
+    title: 'Maintenance Technician',
     password: 'demo',
-    department: 'engineering',
-    clearance: 3,
-    projects: ['search'],
+    department: 'maintenance',
+    clearance: 2,
+    unit: 'unit-2',
   },
   {
-    email: 'intern@nexora.com',
-    name: 'Sam Wilson',
-    title: 'Engineering Intern',
+    email: 'operator@bpi.com',
+    name: 'Sunil Yadav',
+    title: 'Field Operator',
     password: 'demo',
-    department: 'engineering',
+    department: 'operations',
     clearance: 1,
-    projects: [],
+    unit: 'unit-2',
   },
 ];
 
@@ -62,16 +62,16 @@ export async function seedUsers() {
   for (const u of DEMO_USERS) {
     const hash = await bcrypt.hash(u.password, 10);
     await query(
-      `INSERT INTO users (email, name, password_hash, department, clearance, projects, title)
+      `INSERT INTO users (email, name, password_hash, department, clearance, unit, title)
        VALUES ($1, $2, $3, $4, $5, $6, $7)
        ON CONFLICT (email) DO UPDATE SET
          name = EXCLUDED.name,
          password_hash = EXCLUDED.password_hash,
          department = EXCLUDED.department,
          clearance = EXCLUDED.clearance,
-         projects = EXCLUDED.projects,
+         unit = EXCLUDED.unit,
          title = EXCLUDED.title`,
-      [u.email, u.name, hash, u.department, u.clearance, u.projects, u.title]
+      [u.email, u.name, hash, u.department, u.clearance, u.unit, u.title]
     );
   }
   log.info(`Seeded ${DEMO_USERS.length} demo users`);
@@ -93,6 +93,6 @@ export async function verifyCredentials(email, password) {
     title: user.title,
     department: user.department,
     clearance: user.clearance,
-    projects: user.projects,
+    unit: user.unit,
   };
 }

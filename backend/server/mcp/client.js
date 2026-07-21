@@ -1,20 +1,27 @@
-// MCP client — routes a tool call from the agent to the right action server
-// (Jira, Gmail) or an internal handler, records the action in Postgres, and
-// returns { result, mode } where mode is 'live' or 'simulated'.
-import { createTicket } from './servers/jira.js';
-import { draftEmail } from './servers/gmail.js';
-import { extractActionItems, generateReport } from './internal.js';
+// Action dispatcher — routes an action request to its handler, but FIRST checks
+// action-level permissions (not everyone can create a work order). Records every
+// action (or permission denial) to Postgres.
+import { createWorkOrder, draftNotification, generateRcaReport, generateComplianceReport } from './actions.js';
+import { canPerform } from '../auth/action-policy.js';
 import { query } from '../config/postgres.js';
 import { createLogger } from '../utils/logger.js';
 
 const log = createLogger('mcp-client');
 
+const HANDLERS = {
+  create_work_order: createWorkOrder,
+  draft_notification: draftNotification,
+  generate_rca_report: generateRcaReport,
+  generate_compliance_report: generateComplianceReport,
+};
+
 async function recordAction(userEmail, tool, args, result, mode) {
   try {
+    // Don't store the user object nested in args.
+    const { user: _u, ...cleanArgs } = args || {};
     await query(
-      `INSERT INTO action_records (user_email, tool, arguments, result, mode)
-       VALUES ($1, $2, $3, $4, $5)`,
-      [userEmail, tool, JSON.stringify(args), JSON.stringify(result), mode]
+      `INSERT INTO action_records (user_email, tool, arguments, result, mode) VALUES ($1,$2,$3,$4,$5)`,
+      [userEmail, tool, JSON.stringify(cleanArgs), JSON.stringify(result), mode]
     );
   } catch (err) {
     log.warn(`Failed to record action: ${err.message}`);
@@ -22,35 +29,19 @@ async function recordAction(userEmail, tool, args, result, mode) {
 }
 
 export async function executeTool(name, args, user) {
-  let mode = 'internal';
-  let result;
+  const handler = HANDLERS[name];
+  if (!handler) throw new Error(`Unknown action: ${name}`);
 
-  switch (name) {
-    case 'create_ticket': {
-      const out = await createTicket(args);
-      result = out.result;
-      mode = out.mode;
-      break;
-    }
-    case 'draft_email': {
-      const out = await draftEmail(args);
-      result = out.result;
-      mode = out.mode;
-      break;
-    }
-    case 'extract_action_items':
-      result = extractActionItems(args);
-      mode = 'internal';
-      break;
-    case 'generate_report':
-      result = generateReport(args);
-      mode = 'internal';
-      break;
-    default:
-      throw new Error(`Unknown tool: ${name}`);
+  // Permission gate — the "not everyone can do this" check.
+  const perm = canPerform(user, name);
+  if (!perm.allowed) {
+    log.info(`DENIED ${name} for ${user?.email} (${user?.department} L${user?.clearance})`);
+    await recordAction(user?.email, name, args, { denied: true, reason: perm.reason }, 'denied');
+    return { result: { denied: true, reason: perm.reason }, mode: 'denied' };
   }
 
+  const { result, mode } = await handler(args, user);
   await recordAction(user?.email, name, args, result, mode);
-  log.info(`Executed ${name} (${mode}) for ${user?.email || 'anonymous'}`);
+  log.info(`Executed ${name} (${mode}) for ${user?.email}`);
   return { result, mode };
 }

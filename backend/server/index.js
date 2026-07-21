@@ -14,6 +14,10 @@ import graphRouter from './routes/graph.js';
 import ingestRouter from './routes/ingest.js';
 import sourcesRouter from './routes/sources.js';
 import auditRouter from './routes/audit.js';
+import workOrdersRouter from './routes/workorders.js';
+import notificationsRouter from './routes/notifications.js';
+import reportsRouter from './routes/reports.js';
+import documentsRouter from './routes/documents.js';
 
 import { rateLimiter } from './middleware/rateLimiter.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
@@ -32,7 +36,7 @@ app.use(rateLimiter);
 
 // Health endpoint reports connectivity to each backing service.
 app.get('/health', async (_req, res) => {
-  const status = { service: 'Nexora Knowledge Brain', version: '2.0.0', time: new Date().toISOString() };
+  const status = { service: 'AssetBrain — Industrial Knowledge Intelligence', version: '2.0.0', time: new Date().toISOString() };
   const checks = {};
   await Promise.all([
     pingPostgres().then(() => (checks.postgres = 'ok')).catch((e) => (checks.postgres = e.message)),
@@ -49,6 +53,10 @@ app.use('/graph', graphRouter);
 app.use('/ingest', ingestRouter);
 app.use('/sources', sourcesRouter);
 app.use('/audit', auditRouter);
+app.use('/work-orders', workOrdersRouter);
+app.use('/notifications', notificationsRouter);
+app.use('/reports', reportsRouter);
+app.use('/documents', documentsRouter);
 
 app.use(notFound);
 app.use(errorHandler);

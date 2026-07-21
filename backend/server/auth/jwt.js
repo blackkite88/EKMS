@@ -9,7 +9,7 @@ export function signToken(user) {
     name: user.name,
     department: user.department,
     clearance: user.clearance,
-    projects: user.projects,
+    unit: user.unit,
     title: user.title,
   };
   return jwt.sign(payload, env.jwtSecret, { expiresIn: env.jwtExpiresIn });

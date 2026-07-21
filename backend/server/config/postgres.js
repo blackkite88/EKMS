@@ -30,10 +30,13 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash TEXT NOT NULL,
   department    TEXT NOT NULL,
   clearance     INTEGER NOT NULL,
-  projects      TEXT[] NOT NULL DEFAULT '{}',
+  unit          TEXT NOT NULL DEFAULT 'all',
   title         TEXT,
   created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+-- Migrate legacy 'projects' schema to 'unit' if this DB predates the industrial model.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS unit TEXT NOT NULL DEFAULT 'all';
+ALTER TABLE users DROP COLUMN IF EXISTS projects;
 
 CREATE TABLE IF NOT EXISTS conversations (
   id          SERIAL PRIMARY KEY,
@@ -61,17 +64,62 @@ CREATE INDEX IF NOT EXISTS idx_audit_user ON audit_log(user_email, created_at);
 CREATE TABLE IF NOT EXISTS action_records (
   id          SERIAL PRIMARY KEY,
   user_email  TEXT,
-  tool        TEXT NOT NULL,          -- 'draft_email' | 'create_ticket' ...
+  tool        TEXT NOT NULL,          -- 'generate_rca_report' | 'create_work_order' ...
   arguments   JSONB NOT NULL,
   result      JSONB,
-  mode        TEXT NOT NULL,          -- 'live' | 'simulated'
+  mode        TEXT NOT NULL,          -- 'live' | 'simulated' | 'internal'
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Real work orders created via the assistant. ABAC-scoped like documents.
+CREATE TABLE IF NOT EXISTS work_orders (
+  id            SERIAL PRIMARY KEY,
+  wo_number     TEXT UNIQUE NOT NULL,
+  title         TEXT NOT NULL,
+  description   TEXT,
+  equipment_id  TEXT,
+  priority      TEXT NOT NULL DEFAULT 'medium',
+  status        TEXT NOT NULL DEFAULT 'open',
+  created_by    TEXT,
+  assigned_to   TEXT,
+  access_department TEXT NOT NULL DEFAULT 'maintenance',
+  access_unit       TEXT NOT NULL DEFAULT 'all',
+  access_min_clearance INTEGER NOT NULL DEFAULT 2,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- In-app notifications delivered to a specific recipient (role or email).
+CREATE TABLE IF NOT EXISTS notifications (
+  id          SERIAL PRIMARY KEY,
+  recipient   TEXT NOT NULL,          -- an email or a role/department name
+  sender      TEXT,
+  title       TEXT NOT NULL,
+  body        TEXT,
+  related_to  TEXT,                   -- e.g. equipment tag or WO number
+  is_read     BOOLEAN NOT NULL DEFAULT false,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_notifications_recipient ON notifications(recipient, created_at);
+
+-- Generated RCA / compliance reports. ABAC-scoped.
+CREATE TABLE IF NOT EXISTS action_reports (
+  id            SERIAL PRIMARY KEY,
+  report_type   TEXT NOT NULL,        -- 'rca' | 'compliance'
+  title         TEXT NOT NULL,
+  content       JSONB NOT NULL,       -- structured sections
+  equipment_id  TEXT,
+  created_by    TEXT,
+  access_department TEXT NOT NULL DEFAULT 'engineering',
+  access_unit       TEXT NOT NULL DEFAULT 'all',
+  access_min_clearance INTEGER NOT NULL DEFAULT 2,
+  access_sensitivity   TEXT NOT NULL DEFAULT 'internal',
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 `;
 
 export async function initSchema() {
   await getPool().query(SCHEMA);
-  log.info('Postgres schema ensured (users, conversations, audit_log, action_records)');
+  log.info('Postgres schema ensured (users, conversations, audit_log, action_records, work_orders, notifications, action_reports)');
 }
 
 export async function pingPostgres() {
