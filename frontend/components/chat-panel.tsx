@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { ArrowUp, CheckCircle2, FileText, Loader2, Sparkles, Wrench } from 'lucide-react'
+import { ArrowUp, BellRing, CheckCircle2, ClipboardList, FileSearch, FileText, Loader2, ShieldCheck, Sparkles, Wrench } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -9,11 +9,17 @@ import { Textarea } from '@/components/ui/textarea'
 import { streamQuery, ApiError } from '@/lib/api'
 import { useAuth } from '@/lib/auth-context'
 import { useGraphStream } from '@/lib/graph-stream-context'
-import type { ChatMessage, Citation } from '@/lib/types'
+import { ACTION_META, type ChatMessage, type Citation } from '@/lib/types'
 
-const CITATION_RE = /\[(EMAIL|TICKET|MEETING|DOC|PR)\s*\|\s*([^\]]+)\]/gi
+const CITATION_RE = /\[(EQUIPMENT|WO|INSPECTION|FAILURE|MANUAL|PROCEDURE|REGULATION|LOG)\s*\|\s*([^\]]+)\]/gi
 
-// Extract citation tags from streamed text (deduped by id).
+const ACTION_ICON: Record<string, typeof FileSearch> = {
+  generate_rca_report: FileSearch,
+  create_work_order: ClipboardList,
+  generate_compliance_report: ShieldCheck,
+  draft_notification: BellRing,
+}
+
 function extractCitations(text: string): Citation[] {
   const found = new Map<string, Citation>()
   let m: RegExpExecArray | null
@@ -29,7 +35,12 @@ function initialsOf(name: string) {
   return name.split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase()
 }
 
-export function ChatPanel() {
+const EMPTY_MSG = (id: string, role: 'user' | 'assistant', text: string): ChatMessage => ({
+  id, role, text, citations: [], toolCalls: [], suggestedActions: [], confidence: null,
+  complianceGaps: [], routing: null, elapsedMs: null, streaming: role === 'assistant',
+})
+
+export function ChatPanel({ onOpenDocument }: { onOpenDocument?: (id: string) => void }) {
   const { user, token } = useAuth()
   const { reset, applyEvent } = useGraphStream()
   const [question, setQuestion] = useState('')
@@ -37,84 +48,86 @@ export function ChatPanel() {
   const [streaming, setStreaming] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const sessionIdRef = useRef(`sess_${Date.now()}`)
+  const permitted = user?.permittedActions || []
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
   }, [messages])
 
-  async function submitQuestion() {
-    const q = question.trim()
+  async function send(text: string) {
+    const q = text.trim()
     if (!q || streaming || !token) return
-
     setQuestion('')
     setStreaming(true)
-    reset() // clear the graph for the new query
+    reset()
 
-    const userMsg: ChatMessage = {
-      id: `u_${Date.now()}`,
-      role: 'user',
-      text: q,
-      citations: [],
-      toolCalls: [],
-      streaming: false,
-    }
     const assistantId = `a_${Date.now()}`
-    const assistantMsg: ChatMessage = {
-      id: assistantId,
-      role: 'assistant',
-      text: '',
-      citations: [],
-      toolCalls: [],
-      streaming: true,
-    }
-    setMessages((prev) => [...prev, userMsg, assistantMsg])
-
-    const patchAssistant = (fn: (m: ChatMessage) => ChatMessage) =>
+    setMessages((prev) => [...prev, EMPTY_MSG(`u_${Date.now()}`, 'user', q), EMPTY_MSG(assistantId, 'assistant', '')])
+    const patch = (fn: (m: ChatMessage) => ChatMessage) =>
       setMessages((prev) => prev.map((m) => (m.id === assistantId ? fn(m) : m)))
 
     try {
       for await (const event of streamQuery(token, q, sessionIdRef.current)) {
-        // Feed graph-relevant events to the shared graph state.
         applyEvent(event)
-
-        if (event.type === 'text') {
-          patchAssistant((m) => {
-            const text = m.text + event.text
-            return { ...m, text, citations: extractCitations(text) }
-          })
-        } else if (event.type === 'tool_call') {
-          patchAssistant((m) => ({
-            ...m,
-            toolCalls: [...m.toolCalls, { name: event.name, result: {}, mode: 'pending' }],
-          }))
-        } else if (event.type === 'tool_result') {
-          patchAssistant((m) => ({
-            ...m,
-            toolCalls: m.toolCalls.map((tc) =>
-              tc.name === event.name && tc.mode === 'pending'
-                ? { name: event.name, result: event.result, mode: event.mode }
-                : tc,
-            ),
-          }))
-        } else if (event.type === 'error') {
-          patchAssistant((m) => ({ ...m, text: m.text || `⚠️ ${event.message}` }))
+        switch (event.type) {
+          case 'text':
+            patch((m) => { const t = m.text + event.text; return { ...m, text: t, citations: extractCitations(t) } })
+            break
+          case 'routing':
+            patch((m) => ({ ...m, routing: { decision: event.decision, rewritten: event.rewritten } }))
+            break
+          case 'confidence':
+            patch((m) => ({ ...m, confidence: { level: event.level, sourceCount: event.sourceCount } }))
+            break
+          case 'suggested_actions':
+            patch((m) => ({ ...m, suggestedActions: event.actions }))
+            break
+          case 'compliance_gaps':
+            patch((m) => ({ ...m, complianceGaps: event.gaps }))
+            break
+          case 'tool_call':
+            patch((m) => ({ ...m, toolCalls: [...m.toolCalls, { name: event.name, result: {}, mode: 'pending' }] }))
+            break
+          case 'tool_result':
+            patch((m) => ({
+              ...m,
+              toolCalls: m.toolCalls.map((tc) =>
+                tc.name === event.name && tc.mode === 'pending' ? { name: event.name, result: event.result, mode: event.mode } : tc,
+              ),
+              // A denied action surfaces its reason as the message text.
+              text: event.mode === 'denied' ? String((event.result as { reason?: string })?.reason || m.text) : m.text,
+            }))
+            break
+          case 'done':
+            patch((m) => ({ ...m, elapsedMs: event.elapsedMs ?? null }))
+            break
+          case 'error':
+            patch((m) => ({ ...m, text: m.text || `⚠️ ${event.message}` }))
+            break
         }
       }
     } catch (err) {
       const msg = err instanceof ApiError ? err.message : 'Something went wrong'
-      patchAssistant((m) => ({ ...m, text: m.text || `⚠️ ${msg}` }))
+      patch((m) => ({ ...m, text: m.text || `⚠️ ${msg}` }))
     } finally {
-      patchAssistant((m) => ({ ...m, streaming: false }))
+      patch((m) => ({ ...m, streaming: false }))
       setStreaming(false)
     }
+  }
+
+  // Clicking an action tile sends a natural-language request; the backend router
+  // + permission gate handle it (and deny if the role isn't allowed).
+  function runAction(action: string) {
+    const label = ACTION_META[action]?.label || action
+    send(label + ' based on what we just discussed')
   }
 
   return (
     <section className="flex min-h-[600px] flex-1 flex-col bg-background lg:min-h-0">
       <header className="flex h-16 items-center justify-between border-b px-5">
         <div>
-          <h1 className="font-medium">Ask Nexora</h1>
-          <p className="text-xs text-muted-foreground">Permission-aware answers, grounded in citations</p>
+          <h1 className="font-medium">Ask AssetBrain</h1>
+          <p className="text-xs text-muted-foreground">Equipment, maintenance, root cause &amp; compliance — permission-aware, cited</p>
         </div>
         <Badge variant="secondary">
           <CheckCircle2 data-icon="inline-start" /> {user?.department} · L{user?.clearance}
@@ -127,10 +140,9 @@ export function ChatPanel() {
             <div className="flex size-12 items-center justify-center rounded-xl border bg-card">
               <Sparkles className="size-5 text-primary" aria-hidden="true" />
             </div>
-            <p className="text-sm font-medium">Ask a question across company knowledge</p>
+            <p className="text-sm font-medium">Ask about your plant</p>
             <p className="text-xs text-muted-foreground">
-              Try: &ldquo;Why was the Payments feature delayed?&rdquo; and watch the knowledge graph light up as
-              Nexora reasons through the answer.
+              Try: &ldquo;Why did pump P-101 fail?&rdquo; — and watch the knowledge graph light up as AssetBrain reasons through the root cause across work orders, inspections, manuals, and past failures.
             </p>
           </div>
         )}
@@ -139,9 +151,7 @@ export function ChatPanel() {
           msg.role === 'user' ? (
             <div key={msg.id} className="flex max-w-2xl self-end gap-3">
               <div className="rounded-2xl rounded-tr-sm bg-secondary px-4 py-3 text-sm leading-relaxed">{msg.text}</div>
-              <Avatar size="sm">
-                <AvatarFallback>{user ? initialsOf(user.name) : '?'}</AvatarFallback>
-              </Avatar>
+              <Avatar size="sm"><AvatarFallback>{user ? initialsOf(user.name) : '?'}</AvatarFallback></Avatar>
             </div>
           ) : (
             <div key={msg.id} className="flex max-w-3xl gap-3">
@@ -149,46 +159,84 @@ export function ChatPanel() {
                 <Sparkles aria-hidden="true" className="size-4" />
               </div>
               <div className="flex min-w-0 flex-col gap-3">
+                {/* "interpreted as" — visible query rewriting */}
+                {msg.routing?.rewritten && (
+                  <p className="text-xs text-muted-foreground">
+                    ↳ interpreted as: <span className="italic text-foreground/70">{msg.routing.rewritten}</span>
+                  </p>
+                )}
+
                 <div className="rounded-2xl rounded-tl-sm border bg-card p-5 text-sm leading-relaxed whitespace-pre-wrap">
-                  {msg.text ? (
-                    renderWithCitations(msg.text)
-                  ) : msg.streaming ? (
-                    <span className="flex items-center gap-2 text-muted-foreground">
-                      <Loader2 className="size-4 animate-spin" /> Reasoning...
-                    </span>
+                  {msg.text ? renderWithCitations(msg.text, onOpenDocument) : msg.streaming ? (
+                    <span className="flex items-center gap-2 text-muted-foreground"><Loader2 className="size-4 animate-spin" /> Reasoning…</span>
                   ) : null}
                   {msg.streaming && msg.text && (
-                    <span
-                      className="ml-0.5 inline-block h-4 w-1.5 animate-pulse rounded-full bg-primary align-middle"
-                      aria-label="Response streaming"
-                    />
+                    <span className="ml-0.5 inline-block h-4 w-1.5 animate-pulse rounded-full bg-primary align-middle" aria-label="streaming" />
                   )}
                 </div>
 
-                {msg.toolCalls.length > 0 && (
-                  <div className="flex flex-col gap-2">
-                    {msg.toolCalls.map((tc, i) => (
-                      <div
-                        key={i}
-                        className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-xs"
-                      >
-                        <Wrench className="size-3.5 text-primary" aria-hidden="true" />
-                        <span className="font-mono font-medium">{tc.name}</span>
-                        <Badge variant="outline" className="ml-auto font-mono text-[10px]">
-                          {tc.mode === 'pending' ? 'running...' : tc.mode}
-                        </Badge>
-                      </div>
+                {/* compliance gaps table */}
+                {msg.complianceGaps.length > 0 && (
+                  <div className="rounded-lg border border-warning/30 bg-warning/5 p-3 text-xs">
+                    <p className="mb-2 font-medium">{msg.complianceGaps.length} compliance gap(s) detected</p>
+                    <div className="flex flex-col gap-1">
+                      {msg.complianceGaps.slice(0, 8).map((g, i) => (
+                        <div key={i} className="flex items-center justify-between gap-2">
+                          <span className="font-mono">{g.equipment}</span>
+                          <span className="text-muted-foreground">{g.activity} · {g.regulation}</span>
+                          <Badge variant="destructive" className="text-[10px]">{g.overdue_days != null ? `${g.overdue_days}d overdue` : g.status}</Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* tool calls (actions taken) */}
+                {msg.toolCalls.map((tc, i) => (
+                  <div key={i} className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs ${tc.mode === 'denied' ? 'border-destructive/30 bg-destructive/5' : 'border-primary/20 bg-primary/5'}`}>
+                    <Wrench className="size-3.5 text-primary" aria-hidden="true" />
+                    <span className="font-mono font-medium">{ACTION_META[tc.name]?.label || tc.name}</span>
+                    <Badge variant={tc.mode === 'denied' ? 'destructive' : 'outline'} className="ml-auto font-mono text-[10px]">
+                      {tc.mode === 'pending' ? 'running…' : tc.mode === 'denied' ? 'not permitted' : (tc.result as { wo_number?: string; report_id?: number })?.wo_number || `#${(tc.result as { report_id?: number })?.report_id ?? ''}` || tc.mode}
+                    </Badge>
+                  </div>
+                ))}
+
+                {/* citations */}
+                {msg.citations.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {msg.citations.map((c) => (
+                      <button key={c.id} onClick={() => onOpenDocument?.(c.id)} className="inline-flex items-center gap-1 rounded border bg-transparent px-2 py-0.5 font-mono text-[11px] text-primary transition-colors hover:bg-primary/10">
+                        <FileText className="size-3" />[{c.tag} | {c.id}]
+                      </button>
                     ))}
                   </div>
                 )}
 
-                {msg.citations.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {msg.citations.map((c) => (
-                      <Badge key={c.id} variant="outline" className="font-mono text-[11px]">
-                        <FileText data-icon="inline-start" />[{c.tag} | {c.id}]
-                      </Badge>
-                    ))}
+                {/* confidence + time-to-answer */}
+                {(msg.confidence || msg.elapsedMs != null) && !msg.streaming && (
+                  <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+                    {msg.confidence && (
+                      <span className="inline-flex items-center gap-1">
+                        <span className={`size-1.5 rounded-full ${msg.confidence.level === 'high' ? 'bg-green-500' : msg.confidence.level === 'medium' ? 'bg-amber-500' : 'bg-red-500'}`} />
+                        {msg.confidence.level} confidence · {msg.confidence.sourceCount} sources
+                      </span>
+                    )}
+                    {msg.elapsedMs != null && <span>· answered in {(msg.elapsedMs / 1000).toFixed(1)}s</span>}
+                  </div>
+                )}
+
+                {/* contextual action tiles (only permitted actions) */}
+                {msg.suggestedActions.length > 0 && !msg.streaming && (
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {msg.suggestedActions.filter((a) => permitted.includes(a)).map((a) => {
+                      const Icon = ACTION_ICON[a] || Wrench
+                      return (
+                        <Button key={a} variant="outline" size="sm" onClick={() => runAction(a)} disabled={streaming} className="h-8 gap-1.5 text-xs">
+                          <Icon className="size-3.5" /> {ACTION_META[a]?.label || a}
+                        </Button>
+                      )
+                    })}
                   </div>
                 )}
               </div>
@@ -201,53 +249,41 @@ export function ChatPanel() {
         <div className="mx-auto flex max-w-3xl items-end gap-2 rounded-xl border bg-background p-2 focus-within:ring-2 focus-within:ring-ring">
           <Textarea
             value={question}
-            onChange={(event) => setQuestion(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
-                event.preventDefault()
-                submitQuestion()
-              }
-            }}
+            onChange={(e) => setQuestion(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send(question) } }}
             aria-label="Ask a question"
-            placeholder="Ask a question across company knowledge..."
+            placeholder="Ask about equipment, failures, or compliance…"
             className="min-h-12 resize-none border-0 bg-transparent shadow-none focus-visible:ring-0"
             disabled={streaming}
           />
-          <Button size="icon" onClick={submitQuestion} aria-label="Send question" disabled={streaming || !question.trim()}>
+          <Button size="icon" onClick={() => send(question)} aria-label="Send" disabled={streaming || !question.trim()}>
             {streaming ? <Loader2 className="animate-spin" /> : <ArrowUp />}
           </Button>
         </div>
         <p className="mt-2 text-center font-mono text-[10px] text-muted-foreground">
-          ANSWERS RESPECT YOUR ACCESS LEVEL · RESTRICTED SOURCES ARE FILTERED
+          PERMISSION-AWARE · RESTRICTED RECORDS ARE FILTERED · ACTIONS REQUIRE ROLE AUTHORIZATION
         </p>
       </div>
     </section>
   )
 }
 
-// Render assistant text with citation tags styled inline.
-function renderWithCitations(text: string) {
+function renderWithCitations(text: string, onOpen?: (id: string) => void) {
   const parts: (string | { tag: string; id: string })[] = []
-  let lastIndex = 0
+  let last = 0
   let m: RegExpExecArray | null
   CITATION_RE.lastIndex = 0
   while ((m = CITATION_RE.exec(text)) !== null) {
-    if (m.index > lastIndex) parts.push(text.slice(lastIndex, m.index))
+    if (m.index > last) parts.push(text.slice(last, m.index))
     parts.push({ tag: m[1].toUpperCase(), id: m[2].trim() })
-    lastIndex = m.index + m[0].length
+    last = m.index + m[0].length
   }
-  if (lastIndex < text.length) parts.push(text.slice(lastIndex))
-
-  return parts.map((part, i) =>
-    typeof part === 'string' ? (
-      <span key={i}>{part}</span>
-    ) : (
-      <span
-        key={i}
-        className="mx-0.5 inline-flex items-center rounded bg-primary/10 px-1 font-mono text-[11px] text-primary"
-      >
-        [{part.tag} | {part.id}]
-      </span>
+  if (last < text.length) parts.push(text.slice(last))
+  return parts.map((p, i) =>
+    typeof p === 'string' ? <span key={i}>{p}</span> : (
+      <button key={i} onClick={() => onOpen?.(p.id)} className="mx-0.5 inline-flex items-center rounded bg-primary/10 px-1 font-mono text-[11px] text-primary hover:bg-primary/20">
+        [{p.tag} | {p.id}]
+      </button>
     ),
   )
 }

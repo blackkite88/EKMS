@@ -57,8 +57,8 @@ export function LoginPage() {
               <BrainCircuit aria-hidden="true" className="size-5" />
             </div>
             <div>
-              <p className="font-semibold tracking-tight">Nexora</p>
-              <p className="font-mono text-xs text-muted-foreground">KNOWLEDGE BRAIN / 2.0</p>
+              <p className="font-semibold tracking-tight">AssetBrain</p>
+              <p className="font-mono text-xs text-muted-foreground">INDUSTRIAL KNOWLEDGE / BPI</p>
             </div>
           </div>
           <div className="flex max-w-xl flex-col gap-5 py-16 lg:py-0">
@@ -66,11 +66,10 @@ export function LoginPage() {
               SECURE INTERNAL SYSTEM
             </Badge>
             <h1 className="text-balance text-4xl font-semibold tracking-tight md:text-6xl">
-              Company knowledge, with the right context.
+              Your plant, connected and queryable.
             </h1>
             <p className="max-w-lg text-pretty text-base leading-relaxed text-muted-foreground md:text-lg">
-              Ask questions across trusted company sources. Every answer is permission-aware, traceable, and
-              grounded in citations.
+              Ask why equipment fails, check compliance, and act — across every maintenance record, inspection, manual, and procedure. Permission-aware and cited.
             </p>
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -105,7 +104,7 @@ export function LoginPage() {
                     <Input
                       id="email"
                       type="email"
-                      placeholder="name@nexora.com"
+                      placeholder="name@bpi.com"
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}

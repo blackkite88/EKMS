@@ -11,15 +11,17 @@ import type { GraphResponse } from '@/lib/types'
 
 // Colors per node label (kept in sync with the backend's node tiers).
 const LABEL_COLOR: Record<string, string> = {
-  Email: '#60a5fa',
-  Ticket: '#f59e0b',
-  Meeting: '#a78bfa',
-  PR: '#34d399',
-  Doc: '#f472b6',
-  Person: '#94a3b8',
-  Project: '#22d3ee',
-  Decision: '#fbbf24',
-  Incident: '#ef4444',
+  Equipment: '#f59e0b', // amber hub — the central entity
+  FailureReport: '#ef4444', // red — failures
+  FailureMode: '#fb7185', // rose
+  Inspection: '#a78bfa', // violet
+  WorkOrder: '#60a5fa', // blue
+  Manual: '#34d399', // green
+  Procedure: '#2dd4bf', // teal
+  Regulation: '#22d3ee', // cyan
+  OperatingLog: '#facc15', // yellow
+  Person: '#94a3b8', // slate
+  Unit: '#c084fc', // purple
 }
 
 // Typed loosely: the cytoscape @types union for stylesheets is awkward to

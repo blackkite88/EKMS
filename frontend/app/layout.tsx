@@ -8,8 +8,8 @@ const geistSans = Geist({ subsets: ['latin'], variable: '--font-geist-sans' })
 const geistMono = Geist_Mono({ subsets: ['latin'], variable: '--font-geist-mono' })
 
 export const metadata: Metadata = {
-  title: 'Nexora Knowledge Brain',
-  description: 'Enterprise AI knowledge assistant with permission-aware answers and citations.',
+  title: 'AssetBrain — Industrial Knowledge Intelligence',
+  description: 'Industrial knowledge intelligence — RCA, compliance, and maintenance across your plant.',
   generator: 'v0.app',
 }
 

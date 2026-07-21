@@ -1,6 +1,9 @@
 // Backend API client. Every call goes through here so the base URL, auth
 // header, and error handling live in one place.
-import type { AuthUser, DemoUser, LoginResponse, GraphResponse, SSEEvent, AuditEntry, AuditPolicy } from './types'
+import type {
+  AuthUser, DemoUser, LoginResponse, GraphResponse, SSEEvent, AuditEntry, AuditPolicy,
+  WorkOrder, Notification, ReportSummary, ReportDetail,
+} from './types'
 
 export const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
@@ -58,6 +61,34 @@ export const api = {
 
   auditPolicies(token: string): Promise<{ policies: AuditPolicy[] }> {
     return request('/audit/policies', {}, token)
+  },
+
+  actionPermissions(token: string): Promise<{ permissions: { action: string; label: string; min_clearance: number }[] }> {
+    return request('/auth/action-permissions', {}, token)
+  },
+
+  workOrders(token: string): Promise<{ workOrders: WorkOrder[]; stats: { visible: number; hidden: number; total: number } }> {
+    return request('/work-orders', {}, token)
+  },
+
+  notifications(token: string): Promise<{ notifications: Notification[]; unread: number }> {
+    return request('/notifications', {}, token)
+  },
+
+  markNotificationRead(token: string, id: number): Promise<{ success: boolean }> {
+    return request(`/notifications/${id}/read`, { method: 'POST' }, token)
+  },
+
+  reports(token: string): Promise<{ reports: ReportSummary[] }> {
+    return request('/reports', {}, token)
+  },
+
+  report(token: string, id: number): Promise<ReportDetail> {
+    return request(`/reports/${id}`, {}, token)
+  },
+
+  document(token: string, id: string): Promise<{ id: string; source_type: string; filename: string; content: string }> {
+    return request(`/documents/${encodeURIComponent(id)}`, {}, token)
   },
 }
 

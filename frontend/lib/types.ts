@@ -7,7 +7,8 @@ export interface AuthUser {
   title: string | null
   department: string
   clearance: number
-  projects: string[]
+  unit: string
+  permittedActions?: string[]
 }
 
 export interface LoginResponse {
@@ -21,7 +22,7 @@ export interface DemoUser {
   title: string
   department: string
   clearance: number
-  projects: string[]
+  unit: string
   password: string
 }
 
@@ -45,9 +46,19 @@ export interface GraphResponse {
 }
 
 // ── SSE events (POST /query) ────────────────────────────────────────
+export interface ComplianceGap {
+  regulation: string
+  equipment: string
+  activity: string
+  status: string
+  overdue_days?: number | null
+  last?: string | null
+}
+
 export type SSEEvent =
   | { type: 'auth_context'; user: string; name: string; title: string | null; department: string; clearance: number }
   | { type: 'query_received'; query: string; intent: string }
+  | { type: 'routing'; decision: string; rewritten: string | null }
   | { type: 'graph_seed'; node: string; label: string; title: string }
   | { type: 'node_activated'; node: string; label: string; reason: string; title: string }
   | { type: 'edge_traversed'; from: string; to: string; relation: string }
@@ -56,9 +67,12 @@ export type SSEEvent =
   | { type: 'context_assembled'; sourceCount: number }
   | { type: 'text'; text: string }
   | { type: 'citation_highlight'; node: string }
+  | { type: 'confidence'; level: 'high' | 'medium' | 'low'; sourceCount: number }
+  | { type: 'compliance_gaps'; count: number; gaps: ComplianceGap[] }
+  | { type: 'suggested_actions'; actions: string[] }
   | { type: 'tool_call'; name: string; arguments: Record<string, unknown> }
-  | { type: 'tool_result'; name: string; result: Record<string, unknown>; mode: 'live' | 'simulated' | 'internal' | 'error' }
-  | { type: 'done' }
+  | { type: 'tool_result'; name: string; result: Record<string, unknown>; mode: 'live' | 'simulated' | 'internal' | 'error' | 'denied' }
+  | { type: 'done'; elapsedMs?: number }
   | { type: 'error'; message: string }
 
 // ── Audit (GET /audit) ──────────────────────────────────────────────
@@ -77,6 +91,42 @@ export interface AuditPolicy {
   description: string
 }
 
+// ── Work orders / notifications / reports ──────────────────────────
+export interface WorkOrder {
+  wo_number: string
+  title: string
+  description: string | null
+  equipment_id: string | null
+  priority: string
+  status: string
+  created_by: string | null
+  assigned_to: string | null
+  created_at: string
+}
+
+export interface Notification {
+  id: number
+  title: string
+  body: string | null
+  sender: string | null
+  related_to: string | null
+  is_read: boolean
+  created_at: string
+}
+
+export interface ReportSummary {
+  id: number
+  report_type: 'rca' | 'compliance'
+  title: string
+  equipment_id: string | null
+  created_by: string | null
+  created_at: string
+}
+
+export interface ReportDetail extends ReportSummary {
+  content: Record<string, unknown>
+}
+
 // ── Chat (frontend-local conversation model) ───────────────────────
 export interface Citation {
   tag: string
@@ -89,5 +139,18 @@ export interface ChatMessage {
   text: string
   citations: Citation[]
   toolCalls: { name: string; result: Record<string, unknown>; mode: string }[]
+  suggestedActions: string[]
+  confidence: { level: string; sourceCount: number } | null
+  complianceGaps: ComplianceGap[]
+  routing: { decision: string; rewritten: string | null } | null
+  elapsedMs: number | null
   streaming: boolean
+}
+
+// Action metadata for the UI tiles.
+export const ACTION_META: Record<string, { label: string; icon: string }> = {
+  generate_rca_report: { label: 'Generate RCA Report', icon: 'file-search' },
+  create_work_order: { label: 'Create Work Order', icon: 'clipboard-list' },
+  generate_compliance_report: { label: 'Compliance Report', icon: 'shield-check' },
+  draft_notification: { label: 'Notify Team', icon: 'bell' },
 }
