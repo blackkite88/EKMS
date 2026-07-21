@@ -12,6 +12,7 @@ import { initSchema } from '../config/postgres.js';
 import { seedUsers } from '../auth/users.js';
 import { EVAL_CASES } from './questions.js';
 import { judgeCase } from './judge.js';
+import { entityExtractionMetric, graphLinkageMetric, complianceMetric } from './metrics.js';
 import { renderConsole, renderMarkdown } from './report.js';
 import { closeNeo4j } from '../config/neo4j.js';
 import { closePostgres } from '../config/postgres.js';
@@ -37,8 +38,12 @@ class CaptureStream {
   contextAssembled() {}
   text(t) { this.answer += t; }
   citationHighlight() {}
-  toolCall(name, args) { this.tools.push({ name, args }); }
-  toolResult() {}
+  toolCall(name, args) { this.tools.push({ name, args, mode: 'pending' }); }
+  toolResult(name, result, mode) {
+    const tc = this.tools.find((t) => t.name === name && t.mode === 'pending');
+    if (tc) { tc.result = result; tc.mode = mode; } else { this.tools.push({ name, result, mode }); }
+    this.events.push({ type: 'tool_result', name, result, mode });
+  }
   error(m) { this.events.push({ type: 'error', message: m }); }
   done() { this.closed = true; }
   end() { this.closed = true; }
@@ -53,9 +58,10 @@ async function runCase(evalCase) {
 
   const stream = new CaptureStream();
   const sessionId = `eval_${evalCase.id}_${Date.now()}`;
+  const t0 = Date.now();
   await runQuery({ query: evalCase.question, user, sessionId, stream });
-  // The judge reads `.text` and `.tools`; expose the accumulated answer as text.
-  return { text: stream.answer, tools: stream.tools, events: stream.events };
+  const elapsedMs = Date.now() - t0;
+  return { text: stream.answer, tools: stream.tools, events: stream.events, elapsedMs };
 }
 
 async function main() {
@@ -63,11 +69,22 @@ async function main() {
   await initSchema();
   await seedUsers();
 
+  // 1. Structural metrics (deterministic — no LLM).
+  log.info('Computing structural metrics...');
+  const metrics = {
+    entity: await entityExtractionMetric(),
+    linkage: await graphLinkageMetric(),
+    compliance: await complianceMetric(),
+  };
+
+  // 2. Query benchmark.
   const results = [];
+  const timings = [];
   for (const evalCase of EVAL_CASES) {
     log.info(`Running ${evalCase.id} (as ${evalCase.user})`);
     try {
       const captured = await runCase(evalCase);
+      timings.push(captured.elapsedMs);
       const scored = await judgeCase(evalCase, captured);
       results.push(scored);
     } catch (err) {
@@ -75,9 +92,10 @@ async function main() {
       results.push({ id: evalCase.id, pass: false, checks: { access: { pass: false, detail: err.message } } });
     }
   }
+  metrics.avgLatencyMs = timings.length ? Math.round(timings.reduce((a, b) => a + b, 0) / timings.length) : 0;
 
-  const summary = renderConsole(results);
-  const md = renderMarkdown(results, summary);
+  const summary = renderConsole(results, metrics);
+  const md = renderMarkdown(results, summary, metrics);
   const outPath = path.resolve(__dirname, '../../EVAL_REPORT.md');
   await fs.writeFile(outPath, md, 'utf-8');
   log.info(`Wrote ${outPath}`);

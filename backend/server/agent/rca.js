@@ -8,6 +8,13 @@ import { traverse } from '../graph/traversal.js';
 import { hybridSearch } from '../retrieval/hybrid.js';
 import { labelToCitationTag } from '../graph/schema.js';
 
+// Map a data-folder source_type to the citation tag used in answers, so the
+// evidence block shows the same [WO | ...] format we ask the model to emit.
+const SOURCE_TYPE_TO_TAG = {
+  equipment: 'EQUIPMENT', workorders: 'WO', inspections: 'INSPECTION', failures: 'FAILURE',
+  manuals: 'MANUAL', procedures: 'PROCEDURE', regulations: 'REGULATION', logs: 'LOG',
+};
+
 export const RCA_SYSTEM_PROMPT = `You are AssetBrain performing a Root Cause Analysis for a process plant, reasoning like a senior reliability engineer.
 
 You are given (a) a knowledge subgraph connecting a failure to its work orders, inspections, procedures, manuals, operating logs, and any similar past failures, and (b) the underlying document evidence.
@@ -33,9 +40,10 @@ export function buildRcaContext(graph, retrieval) {
     .map((e) => `  (${e.from}) -[${e.relation}]-> (${e.to})`)
     .join('\n');
   const evidence = (retrieval.results || [])
-    .map((r, i) => {
+    .map((r) => {
       const m = r.metadata || {};
-      return `--- Evidence ${i + 1} [${(m.source_type || 'doc').toUpperCase()} | ${m.source_id}] ---\n${r.content}`;
+      const tag = SOURCE_TYPE_TO_TAG[m.source_type] || 'DOC';
+      return `--- Evidence [${tag} | ${m.source_id}] ---\n${r.content}`;
     })
     .join('\n\n');
   return `CAUSAL SUBGRAPH (the failure and everything connected to it):\nNodes:\n${nodeLines}\nRelationships (causal chain):\n${edgeLines}\n\nDOCUMENT EVIDENCE:\n${evidence}`;

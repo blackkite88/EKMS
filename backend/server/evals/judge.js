@@ -61,33 +61,44 @@ Respond STRICT JSON: {"score": <0-10>, "reason": "<short>"}. No prose.`;
 // Full per-case scoring.
 export async function judgeCase(evalCase, captured) {
   const answer = captured.text || '';
-  const toolFired =
-    evalCase.expect.toolExpected && captured.tools.some((t) => t.name === evalCase.expect.toolExpected);
+  const expect = evalCase.expect;
+  const checks = {};
 
-  // For action cases, a successful tool call IS a successful response even with
-  // no prose — so treat a fired tool as satisfying the access/answered check.
-  const access = toolFired
-    ? { pass: true, detail: 'action performed' }
-    : scoreAccess(evalCase.expect, captured);
+  // Conversation case: expect a short friendly reply and NO document search.
+  if (expect.access === 'conversation') {
+    const replied = answer.trim().length > 0 && !hasCitation(answer);
+    checks.access = { pass: replied, detail: replied ? 'conversational reply' : 'did not reply conversationally' };
+    return { id: evalCase.id, pass: replied, checks };
+  }
 
-  const checks = { access };
+  // Permission-denied action case: expect a denial (a denied tool_result or a
+  // permission message), NOT the action succeeding.
+  if (expect.permissionDenied) {
+    const denied =
+      captured.tools.some((t) => t.mode === 'denied') ||
+      /permission/i.test(answer) ||
+      captured.events?.some((e) => e.type === 'tool_result' && e.mode === 'denied');
+    checks.access = { pass: denied, detail: denied ? 'correctly denied (no permission)' : 'action NOT denied — permission leak' };
+    return { id: evalCase.id, pass: denied, checks };
+  }
 
-  if (evalCase.expect.access === 'full') {
-    if (evalCase.expect.mustCite) {
+  const toolFired = expect.toolExpected && captured.tools.some((t) => t.name === expect.toolExpected && t.mode !== 'denied');
+  const access = toolFired ? { pass: true, detail: 'action performed' } : scoreAccess(expect, captured);
+  checks.access = access;
+
+  if (expect.access === 'full') {
+    if (expect.mustCite) {
       checks.citation = { pass: hasCitation(answer), detail: hasCitation(answer) ? 'cited' : 'no citation' };
     }
-    if (evalCase.expect.toolExpected) {
-      checks.tool = { pass: Boolean(toolFired), detail: toolFired ? `${evalCase.expect.toolExpected} fired` : 'tool not triggered' };
+    if (expect.toolExpected) {
+      checks.tool = { pass: Boolean(toolFired), detail: toolFired ? `${expect.toolExpected} fired` : 'tool not triggered' };
     }
-    if (evalCase.expect.keyFacts) {
-      checks.correctness = await scoreCorrectness(evalCase.question, evalCase.expect, answer);
+    if (expect.keyFacts) {
+      checks.correctness = await scoreCorrectness(evalCase.question, expect, answer);
     }
   }
 
-  const gates = [checks.access?.pass, checks.citation?.pass, checks.tool?.pass].filter(
-    (v) => v !== undefined
-  );
+  const gates = [checks.access?.pass, checks.citation?.pass, checks.tool?.pass].filter((v) => v !== undefined);
   const pass = gates.every(Boolean);
-
   return { id: evalCase.id, pass, checks };
 }

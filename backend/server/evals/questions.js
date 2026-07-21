@@ -1,76 +1,92 @@
-// The eval suite. Each case runs a question AS a specific user and asserts on
-// answer quality AND access-correctness. The access cases are what make this
-// harness special: the same question, different users, must yield different
-// (correct) access outcomes.
-//
-// `expect.access`: 'full'   → user should get a substantive, cited answer
-//                  'denied' → user should be refused / told it's restricted
+// The domain-expert benchmark question set. Each case runs a question AS a
+// specific plant role and asserts on answer quality AND access-correctness.
+// These map to the challenge's "Evaluation Focus" — expert benchmark questions
+// spanning maintenance history, root-cause analysis, compliance, and
+// cross-functional discovery.
 export const EVAL_CASES = [
   {
-    id: 'Q1-payments-delay',
-    question: 'Why was the Payments feature delayed?',
-    user: 'eng.lead@nexora.com',
+    id: 'Q1-rca-p101',
+    question: 'Why did pump P-101 fail?',
+    user: 'reliability@bpi.com',
     expect: {
       access: 'full',
-      keyFacts: ['PCI', 'compliance', 'pen test', 'rate limit'],
+      keyFacts: ['bearing', 'seizure', 'seal replacement', 'alignment', 'SOP-SEAL-REPL', 'vibration'],
       mustCite: true,
     },
   },
   {
-    id: 'Q2-db-approval',
-    question: 'Who approved the database migration?',
-    user: 'eng.lead@nexora.com',
+    id: 'Q2-rca-systemic-root-cause',
+    question: 'What is the systemic root cause of the P-101 bearing failure?',
+    user: 'reliability@bpi.com',
     expect: {
       access: 'full',
-      keyFacts: ['Raj Patel', 'Priya Sharma'],
+      keyFacts: ['SOP', 'alignment', 'procedure', 'missing', 'manual'],
       mustCite: true,
     },
   },
   {
-    id: 'Q3-breach-as-cto',
-    question: 'Summarize the security incident.',
-    user: 'cto@nexora.com',
+    id: 'Q3-cross-functional-pattern',
+    question: 'Has a failure like the P-101 bearing seizure happened before on similar equipment?',
+    user: 'reliability@bpi.com',
     expect: {
       access: 'full',
-      keyFacts: ['breach'],
+      keyFacts: ['P-102', '2023', 'similar', 'bearing'],
       mustCite: true,
     },
   },
   {
-    id: 'Q3-breach-as-intern',
-    question: 'Summarize the security incident.',
-    user: 'intern@nexora.com',
-    expect: {
-      access: 'denied',
-      refusalExpected: true,
-    },
-  },
-  {
-    id: 'Q4-draft-email',
-    question: 'Draft a follow-up email about the API rate limiting issue.',
-    user: 'eng.lead@nexora.com',
+    id: 'Q4-maintenance-history',
+    question: 'What is the maintenance and inspection history of pump P-101?',
+    user: 'technician@bpi.com',
     expect: {
       access: 'full',
-      toolExpected: 'draft_email',
-    },
-  },
-  {
-    id: 'Q5-breach-chain-as-cto',
-    question: 'What chain of events led to the security breach?',
-    user: 'cto@nexora.com',
-    expect: {
-      access: 'full',
-      keyFacts: ['breach'],
+      keyFacts: ['WO-2041', 'seal', 'INS-311', 'vibration'],
       mustCite: true,
     },
   },
   {
-    id: 'Q5-breach-chain-as-engineer',
-    question: 'What chain of events led to the security breach?',
-    user: 'engineer@nexora.com',
+    id: 'Q5-compliance-gaps',
+    question: 'What compliance gaps exist across the plant?',
+    user: 'reliability@bpi.com',
     expect: {
-      access: 'denied',
-      refusalExpected: true,
+      access: 'full',
+      keyFacts: ['overdue', 'OISD', 'vibration'],
+    },
+  },
+  {
+    id: 'Q6-factual-manual',
+    question: 'What does the KSB pump manual require after a mechanical seal replacement?',
+    user: 'technician@bpi.com',
+    expect: {
+      access: 'full',
+      keyFacts: ['alignment', 'verify', 'shaft'],
+      mustCite: true,
+    },
+  },
+  {
+    id: 'Q7-action-work-order',
+    question: 'Create a work order to update the seal replacement SOP with an alignment check.',
+    user: 'technician@bpi.com',
+    expect: {
+      access: 'full',
+      toolExpected: 'create_work_order',
+    },
+  },
+  {
+    id: 'Q8-action-denied-operator',
+    question: 'Create a work order for pump P-101.',
+    user: 'operator@bpi.com',
+    expect: {
+      access: 'denied', // operator lacks permission to create work orders
+      permissionDenied: true,
+    },
+  },
+  {
+    id: 'Q9-greeting',
+    question: 'hi',
+    user: 'operator@bpi.com',
+    expect: {
+      access: 'conversation', // should reply conversationally, no search
     },
   },
 ];
