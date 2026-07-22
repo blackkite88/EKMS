@@ -2,7 +2,7 @@
 // header, and error handling live in one place.
 import type {
   AuthUser, DemoUser, LoginResponse, GraphResponse, SSEEvent, AuditEntry, AuditPolicy,
-  WorkOrder, Notification, ReportSummary, ReportDetail,
+  WorkOrder, Notification, ReportSummary, ReportDetail, ConversationSummary, ConversationTurn,
 } from './types'
 
 export const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
@@ -99,6 +99,14 @@ export const api = {
     args: Record<string, unknown>,
   ): Promise<{ action: string; mode: string; result: Record<string, unknown>; message: string }> {
     return request(`/actions/${action}/execute`, { method: 'POST', body: JSON.stringify(args) }, token)
+  },
+
+  conversations(token: string): Promise<{ conversations: ConversationSummary[] }> {
+    return request('/conversations', {}, token)
+  },
+
+  conversation(token: string, sessionId: string): Promise<{ session_id: string; messages: ConversationTurn[] }> {
+    return request(`/conversations/${encodeURIComponent(sessionId)}`, {}, token)
   },
 }
 

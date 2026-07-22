@@ -43,3 +43,49 @@ export async function buildMemoryContext(sessionId) {
     .map((t) => `${t.role === 'user' ? 'User' : 'Assistant'}: ${t.content.slice(0, 400)}`)
     .join('\n');
 }
+
+// List a user's past conversations (one row per session), newest first, with a
+// title derived from the first user message and a turn count.
+export async function listSessions(userEmail, limit = 50) {
+  try {
+    const { rows } = await query(
+      `SELECT c.session_id,
+              MIN(c.created_at) AS started_at,
+              MAX(c.created_at) AS last_at,
+              COUNT(*) AS turns,
+              (ARRAY_AGG(c.content ORDER BY c.created_at) FILTER (WHERE c.role = 'user'))[1] AS first_message
+       FROM conversations c
+       WHERE c.user_email = $1
+       GROUP BY c.session_id
+       ORDER BY MAX(c.created_at) DESC
+       LIMIT $2`,
+      [userEmail, limit]
+    );
+    return rows.map((r) => ({
+      session_id: r.session_id,
+      title: (r.first_message || 'Conversation').slice(0, 80),
+      turns: Number(r.turns),
+      started_at: r.started_at,
+      last_at: r.last_at,
+    }));
+  } catch (err) {
+    log.warn(`Failed to list sessions: ${err.message}`);
+    return [];
+  }
+}
+
+// Load the full transcript of one session (verifying it belongs to the user).
+export async function loadSession(sessionId, userEmail) {
+  try {
+    const { rows } = await query(
+      `SELECT role, content, created_at FROM conversations
+       WHERE session_id = $1 AND user_email = $2
+       ORDER BY created_at ASC`,
+      [sessionId, userEmail]
+    );
+    return rows;
+  } catch (err) {
+    log.warn(`Failed to load session: ${err.message}`);
+    return [];
+  }
+}

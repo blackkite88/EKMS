@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { ArrowUp, BellRing, CheckCircle2, ClipboardList, FileSearch, FileText, Loader2, ShieldCheck, Sparkles, Wrench } from 'lucide-react'
+import { ArrowUp, BellRing, CheckCircle2, ClipboardList, FileSearch, FileText, History, Loader2, Plus, ShieldCheck, Sparkles, Wrench } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { api, streamQuery, ApiError } from '@/lib/api'
 import { useAuth } from '@/lib/auth-context'
 import { useGraphStream } from '@/lib/graph-stream-context'
-import { ACTION_META, type ChatMessage, type Citation } from '@/lib/types'
+import { ACTION_META, type ChatMessage, type Citation, type ConversationSummary } from '@/lib/types'
 import ReactMarkdown, { defaultUrlTransform } from 'react-markdown'
 
 const CITATION_RE = /\[(EQUIPMENT|WO|INSPECTION|FAILURE|MANUAL|PROCEDURE|REGULATION|LOG)\s*\|\s*([^\]]+)\]/gi
@@ -36,6 +36,20 @@ function initialsOf(name: string) {
   return name.split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase()
 }
 
+// Relative-ish timestamp for the history list ("2h ago", "3d ago", or a date).
+function formatWhen(iso: string) {
+  const then = new Date(iso).getTime()
+  if (Number.isNaN(then)) return ''
+  const diffMin = Math.round((Date.now() - then) / 60000)
+  if (diffMin < 1) return 'just now'
+  if (diffMin < 60) return `${diffMin}m ago`
+  const diffHr = Math.round(diffMin / 60)
+  if (diffHr < 24) return `${diffHr}h ago`
+  const diffDay = Math.round(diffHr / 24)
+  if (diffDay < 7) return `${diffDay}d ago`
+  return new Date(iso).toLocaleDateString()
+}
+
 const EMPTY_MSG = (id: string, role: 'user' | 'assistant', text: string): ChatMessage => ({
   id, role, text, citations: [], toolCalls: [], suggestedActions: [], proposedAction: null,
   actionResults: [], confidence: null, complianceGaps: [], routing: null, elapsedMs: null,
@@ -48,38 +62,74 @@ export function ChatPanel({ onOpenDocument }: { onOpenDocument?: (id: string) =>
   const [question, setQuestion] = useState('')
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [streaming, setStreaming] = useState(false)
+  const [historyOpen, setHistoryOpen] = useState(false)
+  const [history, setHistory] = useState<ConversationSummary[]>([])
   const scrollRef = useRef<HTMLDivElement>(null)
   const sessionIdRef = useRef(`sess_${Date.now()}`)
   const permitted = user?.permittedActions || []
 
-  // Load chat memory from sessionStorage on mount
+  // Restore the last active chat (client cache) on mount for a seamless refresh.
   useEffect(() => {
     const savedMessages = sessionStorage.getItem('chat_messages')
     const savedSessionId = sessionStorage.getItem('chat_session_id')
     if (savedMessages) {
-      try {
-        setMessages(JSON.parse(savedMessages))
-      } catch (e) {
-        // ignore errors
-      }
+      try { setMessages(JSON.parse(savedMessages)) } catch { /* ignore */ }
     }
-    if (savedSessionId) {
-      sessionIdRef.current = savedSessionId
-    } else {
-      sessionStorage.setItem('chat_session_id', sessionIdRef.current)
-    }
+    if (savedSessionId) sessionIdRef.current = savedSessionId
+    else sessionStorage.setItem('chat_session_id', sessionIdRef.current)
   }, [])
 
-  // Save chat memory whenever messages update
   useEffect(() => {
-    if (messages.length > 0) {
-      sessionStorage.setItem('chat_messages', JSON.stringify(messages))
-    }
+    if (messages.length > 0) sessionStorage.setItem('chat_messages', JSON.stringify(messages))
   }, [messages])
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
   }, [messages])
+
+  // Load the user's server-side conversation history when the panel opens.
+  async function loadHistory() {
+    if (!token) return
+    try {
+      const r = await api.conversations(token)
+      setHistory(r.conversations)
+    } catch { /* ignore */ }
+  }
+
+  function toggleHistory() {
+    const next = !historyOpen
+    setHistoryOpen(next)
+    if (next) loadHistory()
+  }
+
+  // Start a fresh conversation (new session id, clear the view).
+  function newChat() {
+    const id = `sess_${Date.now()}`
+    sessionIdRef.current = id
+    sessionStorage.setItem('chat_session_id', id)
+    sessionStorage.removeItem('chat_messages')
+    setMessages([])
+    setHistoryOpen(false)
+    reset()
+  }
+
+  // Revisit a past conversation — load its transcript from the server.
+  async function openConversation(sessionId: string) {
+    if (!token) return
+    try {
+      const r = await api.conversation(token, sessionId)
+      sessionIdRef.current = sessionId
+      sessionStorage.setItem('chat_session_id', sessionId)
+      const restored: ChatMessage[] = r.messages.map((m, i) => ({
+        ...EMPTY_MSG(`h_${i}`, m.role, m.content),
+        citations: m.role === 'assistant' ? extractCitations(m.content) : [],
+        streaming: false,
+      }))
+      setMessages(restored)
+      sessionStorage.setItem('chat_messages', JSON.stringify(restored))
+      setHistoryOpen(false)
+    } catch { /* ignore */ }
+  }
 
   async function send(text: string) {
     const q = text.trim()
@@ -176,14 +226,57 @@ export function ChatPanel({ onOpenDocument }: { onOpenDocument?: (id: string) =>
 
   return (
     <section className="flex min-h-[600px] flex-1 flex-col bg-background lg:min-h-0">
-      <header className="flex h-16 items-center justify-between border-b px-5">
+      <header className="relative flex h-16 items-center justify-between border-b px-5">
         <div>
           <h1 className="font-medium">Ask AssetBrain</h1>
           <p className="text-xs text-muted-foreground">Equipment, maintenance, root cause &amp; compliance — permission-aware, cited</p>
         </div>
-        <Badge variant="secondary">
-          <CheckCircle2 data-icon="inline-start" /> {user?.department} · L{user?.clearance}
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={newChat} className="gap-1.5">
+            <Plus className="size-4" /> New chat
+          </Button>
+          <Button
+            variant={historyOpen ? 'secondary' : 'outline'}
+            size="sm"
+            onClick={toggleHistory}
+            className="gap-1.5"
+            aria-expanded={historyOpen}
+          >
+            <History className="size-4" /> History
+          </Button>
+          <Badge variant="secondary" className="hidden sm:inline-flex">
+            <CheckCircle2 data-icon="inline-start" /> {user?.department} · L{user?.clearance}
+          </Badge>
+        </div>
+
+        {/* History dropdown — the user's past conversations, loaded from the server */}
+        {historyOpen && (
+          <>
+            <div className="fixed inset-0 z-10" onClick={() => setHistoryOpen(false)} aria-hidden="true" />
+            <div className="absolute right-5 top-14 z-20 flex max-h-[60vh] w-80 flex-col overflow-hidden rounded-xl border bg-card shadow-lg">
+              <div className="border-b px-4 py-2.5 text-xs font-medium text-muted-foreground">Recent conversations</div>
+              <div className="flex-1 overflow-y-auto">
+                {history.length === 0 ? (
+                  <p className="px-4 py-6 text-center text-xs text-muted-foreground">No past conversations yet.</p>
+                ) : (
+                  history.map((c) => (
+                    <button
+                      key={c.session_id}
+                      type="button"
+                      onClick={() => openConversation(c.session_id)}
+                      className={`flex w-full flex-col gap-0.5 border-b px-4 py-2.5 text-left transition-colors hover:bg-secondary ${c.session_id === sessionIdRef.current ? 'bg-secondary/60' : ''}`}
+                    >
+                      <span className="truncate text-sm">{c.title}</span>
+                      <span className="text-[11px] text-muted-foreground">
+                        {Math.ceil(c.turns / 2)} exchange{Math.ceil(c.turns / 2) === 1 ? '' : 's'} · {formatWhen(c.last_at)}
+                      </span>
+                    </button>
+                  ))
+                )}
+              </div>
+            </div>
+          </>
+        )}
       </header>
 
       <div ref={scrollRef} className="flex flex-1 flex-col gap-7 overflow-y-auto p-5 md:p-8">

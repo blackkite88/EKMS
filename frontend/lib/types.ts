@@ -128,6 +128,21 @@ export interface ReportDetail extends ReportSummary {
   content: Record<string, unknown>
 }
 
+// ── Conversation history ────────────────────────────────────────────
+export interface ConversationSummary {
+  session_id: string
+  title: string
+  turns: number
+  started_at: string
+  last_at: string
+}
+
+export interface ConversationTurn {
+  role: 'user' | 'assistant'
+  content: string
+  created_at: string
+}
+
 // ── Chat (frontend-local conversation model) ───────────────────────
 export interface Citation {
   tag: string
