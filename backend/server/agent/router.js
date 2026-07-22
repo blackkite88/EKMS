@@ -28,7 +28,9 @@ Route types:
 - "rca": the user asks WHY a piece of equipment failed, the root cause of a failure, or the chain of events behind a breakdown.
 - "compliance": the user asks about regulatory compliance, inspection due dates, compliance gaps, or audit readiness (OISD/PESO/Factory Act).
 - "action": the user issues a COMMAND to DO something NOW — generate an RCA report, create a work order, generate a compliance report, or notify/alert a team. Set "action" to one of: generate_rca_report, create_work_order, generate_compliance_report, draft_notification. Set "target" to the equipment tag or subject if identifiable. IMPORTANT: only route to "action" for imperative commands ("create…", "generate…", "notify…", "raise…"). A QUESTION about whether something was done or its status ("is he given the work order?", "did that get created?", "what's the status?") is NOT an action — route it to "knowledge" and answer from the conversation/records.
-- "knowledge": any other question about equipment, maintenance history, inspections, procedures, manuals (factual lookup).
+- "knowledge": any other question about equipment, maintenance history, inspections, procedures, manuals, logs, or general plant inquiries (factual lookup). "Tell me about X" is ALWAYS "knowledge".
+
+NEVER refuse to answer a question by saying you already answered it. If asked to repeat or explain again, route it to "knowledge".
 
 CRITICAL — resolve references: if the new message refers to earlier context (e.g. "this", "that pump", "it", "the same"), REWRITE it into a fully self-contained "query" using the conversation. Example: after discussing P-101's failure, "who worked on it?" → "who worked on pump P-101".
 

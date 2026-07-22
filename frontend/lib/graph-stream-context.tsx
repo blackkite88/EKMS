@@ -14,12 +14,14 @@ export interface LiveGraphState {
   highlightedNodeIds: Set<string>
   blockedCount: number
   isTraversing: boolean
+  hoveredNodeId: string | null
 }
 
 interface GraphStreamContextValue {
   live: LiveGraphState
   reset: () => void
   applyEvent: (event: SSEEvent) => void
+  setHoveredNode: (id: string | null) => void
 }
 
 const emptyState: LiveGraphState = {
@@ -29,6 +31,7 @@ const emptyState: LiveGraphState = {
   highlightedNodeIds: new Set(),
   blockedCount: 0,
   isTraversing: false,
+  hoveredNodeId: null,
 }
 
 const GraphStreamContext = createContext<GraphStreamContextValue | null>(null)
@@ -44,7 +47,12 @@ export function GraphStreamProvider({ children }: { children: ReactNode }) {
       highlightedNodeIds: new Set(),
       blockedCount: 0,
       isTraversing: true,
+      hoveredNodeId: null,
     })
+  }, [])
+
+  const setHoveredNode = useCallback((id: string | null) => {
+    setLive((prev) => ({ ...prev, hoveredNodeId: id }))
   }, [])
 
   const applyEvent = useCallback((event: SSEEvent) => {
@@ -75,7 +83,7 @@ export function GraphStreamProvider({ children }: { children: ReactNode }) {
     })
   }, [])
 
-  return <GraphStreamContext.Provider value={{ live, reset, applyEvent }}>{children}</GraphStreamContext.Provider>
+  return <GraphStreamContext.Provider value={{ live, reset, applyEvent, setHoveredNode }}>{children}</GraphStreamContext.Provider>
 }
 
 export function useGraphStream() {

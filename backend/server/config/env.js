@@ -26,7 +26,7 @@ const embeddingProvider = optional('EMBEDDING_PROVIDER', 'ollama').toLowerCase()
 export const env = {
   // Groq
   groqApiKey: required('GROQ_API_KEY'),
-  groqModel: optional('GROQ_MODEL', 'llama-3.3-70b-versatile'),
+  groqModel: optional('GROQ_MODEL', 'llama-3.1-8b-instant'),
 
   // Embeddings
   embeddingProvider,
