@@ -10,7 +10,7 @@ import { api, streamQuery, ApiError } from '@/lib/api'
 import { useAuth } from '@/lib/auth-context'
 import { useGraphStream } from '@/lib/graph-stream-context'
 import { ACTION_META, type ChatMessage, type Citation } from '@/lib/types'
-import ReactMarkdown from 'react-markdown'
+import ReactMarkdown, { defaultUrlTransform } from 'react-markdown'
 
 const CITATION_RE = /\[(EQUIPMENT|WO|INSPECTION|FAILURE|MANUAL|PROCEDURE|REGULATION|LOG)\s*\|\s*([^\]]+)\]/gi
 
@@ -336,14 +336,18 @@ function renderWithCitations(text: string, onOpen?: (id: string) => void, onHove
 
   return (
     <ReactMarkdown
+      // react-markdown v10 sanitizes URLs by default and strips unknown schemes
+      // (like citation://), which broke our citation buttons. Let citation://
+      // through unchanged; keep the safe default transform for everything else.
+      urlTransform={(url) => (url.startsWith('citation://') ? url : defaultUrlTransform(url))}
       components={{
         a: ({ href, children }) => {
           if (href?.startsWith('citation://')) {
             const id = href.replace('citation://', '')
             return (
-              <button 
+              <button
                 type="button"
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); onOpen?.(id); }} 
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); onOpen?.(id) }}
                 onMouseEnter={() => onHover?.(id)}
                 onMouseLeave={() => onHover?.(null)}
                 className="mx-0.5 inline-flex items-center rounded bg-primary/10 px-1 font-mono text-[11px] text-primary hover:bg-primary/20"
@@ -353,7 +357,7 @@ function renderWithCitations(text: string, onOpen?: (id: string) => void, onHove
             )
           }
           return <a href={href} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-primary underline">{children}</a>
-        }
+        },
       }}
     >
       {processedText}
