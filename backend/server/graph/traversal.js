@@ -179,7 +179,15 @@ export async function traverse(query, user, onStep = () => {}, options = {}) {
 
       if (!visited.has(nb.id)) {
         visited.add(nb.id);
-        resultNodes.push({ id: nb.id, label: nb.label, title: nb.props.title || nb.id });
+        const rn = { id: nb.id, label: nb.label, title: nb.props.title || nb.id };
+        // Carry role/unit for people so downstream context (e.g. RCA) can name
+        // WHO is responsible/qualified, not just that a person exists.
+        if (nb.label === 'Person') {
+          rn.person_title = nb.props.person_title || null;
+          rn.specialization = nb.props.specialization || null;
+          rn.unit = nb.props.unit || null;
+        }
+        resultNodes.push(rn);
         onStep({
           type: 'node_activated',
           node: nb.id,
