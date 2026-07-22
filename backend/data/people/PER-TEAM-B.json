@@ -1,0 +1,16 @@
+{
+  "id": "person:Team-B",
+  "name": "Team-B",
+  "title": "Maintenance Crew B",
+  "department": "maintenance",
+  "unit": "unit-2",
+  "specialization": "Fired equipment & furnaces",
+  "equipment_focus": ["F-101"],
+  "access": {
+    "department": "maintenance",
+    "unit": "unit-2",
+    "min_clearance": 1,
+    "sensitivity": "public"
+  },
+  "bio": "Team-B is a Unit-2 maintenance crew handling fired equipment, including furnace F-101 maintenance and tube inspection."
+}

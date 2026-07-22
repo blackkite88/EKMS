@@ -1,0 +1,16 @@
+{
+  "id": "person:Ops Team",
+  "name": "Ops Team",
+  "title": "Operations Team",
+  "department": "operations",
+  "unit": "unit-2",
+  "specialization": "Tank farm & storage operations",
+  "equipment_focus": ["T-501", "T-502"],
+  "access": {
+    "department": "operations",
+    "unit": "unit-2",
+    "min_clearance": 1,
+    "sensitivity": "public"
+  },
+  "bio": "The Ops Team runs day-to-day operations for the Unit-2 tank farm (T-501, T-502), including gauging, transfers, and operator-level maintenance requests."
+}

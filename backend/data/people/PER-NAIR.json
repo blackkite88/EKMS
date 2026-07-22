@@ -1,0 +1,18 @@
+{
+  "id": "person:P. Nair",
+  "name": "P. Nair",
+  "title": "Inspection Technician",
+  "department": "inspection",
+  "unit": "unit-1",
+  "specialization": "Mechanical integrity & thickness monitoring",
+  "equipment_focus": ["P-220"],
+  "years_experience": 8,
+  "reports_to": "Inspection Supervisor",
+  "access": {
+    "department": "inspection",
+    "unit": "unit-1",
+    "min_clearance": 1,
+    "sensitivity": "public"
+  },
+  "bio": "P. Nair is an inspection technician in Unit-1 focused on mechanical integrity and thickness monitoring. Carries out scheduled inspection work orders on Unit-1 equipment such as P-220."
+}

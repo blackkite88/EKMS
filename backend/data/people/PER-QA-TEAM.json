@@ -1,0 +1,16 @@
+{
+  "id": "person:QA Team",
+  "name": "QA Team",
+  "title": "Quality Assurance Team",
+  "department": "inspection",
+  "unit": "unit-2",
+  "specialization": "Inspection QA & pressure-vessel integrity",
+  "equipment_focus": ["HX-208", "HX-401", "V-410", "V-411", "V-420"],
+  "access": {
+    "department": "inspection",
+    "unit": "unit-2",
+    "min_clearance": 1,
+    "sensitivity": "public"
+  },
+  "bio": "The QA Team performs inspection quality assurance and pressure-vessel integrity checks across Unit-2, covering exchangers (HX-208, HX-401) and separators/vessels (V-410, V-411, V-420)."
+}

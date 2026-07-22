@@ -1,0 +1,18 @@
+{
+  "id": "person:S. Iyer",
+  "name": "S. Iyer",
+  "title": "Rotating Equipment Engineer",
+  "department": "engineering",
+  "unit": "unit-2",
+  "specialization": "Reliability & rotating equipment engineering",
+  "equipment_focus": ["P-210", "P-215", "P-230"],
+  "years_experience": 15,
+  "reports_to": "Reliability Manager",
+  "access": {
+    "department": "engineering",
+    "unit": "unit-2",
+    "min_clearance": 1,
+    "sensitivity": "public"
+  },
+  "bio": "S. Iyer is a rotating equipment engineer in Unit-2 responsible for reliability engineering on the process pump fleet (P-210, P-215, P-230). Reviews maintenance strategy for rotating assets and supervises senior technicians including R. Kulkarni."
+}

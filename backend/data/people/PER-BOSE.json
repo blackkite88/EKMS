@@ -1,0 +1,18 @@
+{
+  "id": "person:A. Bose",
+  "name": "A. Bose",
+  "title": "Maintenance Technician",
+  "department": "maintenance",
+  "unit": "unit-1",
+  "specialization": "Reciprocating compressors",
+  "equipment_focus": ["C-301", "C-302", "K-401"],
+  "years_experience": 10,
+  "reports_to": "S. Iyer",
+  "access": {
+    "department": "maintenance",
+    "unit": "unit-1",
+    "min_clearance": 1,
+    "sensitivity": "public"
+  },
+  "bio": "A. Bose is a maintenance technician working across Unit-1 and Unit-2 on reciprocating compressors and rotating equipment (C-301, C-302, K-401). Handles both breakdown and preventive maintenance on compression assets."
+}

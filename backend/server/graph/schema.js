@@ -66,6 +66,7 @@ export function sourceTypeToLabel(sourceType) {
     case 'regulations': return NODE_LABELS.REGULATION;
     case 'logs': return NODE_LABELS.LOG;
     case 'equipment': return NODE_LABELS.EQUIPMENT;
+    case 'people': return NODE_LABELS.PERSON;
     default: return NODE_LABELS.MANUAL;
   }
 }

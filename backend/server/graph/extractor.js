@@ -83,6 +83,44 @@ export function extractBackbone(documents) {
     const selfId = meta.source_id;
     const access = meta.access;
 
+    // ── PEOPLE directory ──
+    // A people/*.json record enriches the Person node the work-order technician
+    // field already creates (id `person:<name>`), so they merge into one node
+    // rather than forming a parallel island. `title` is set to the name so the
+    // seed matcher (which keys off id/title) can find "who is <name>" queries.
+    if (label === NODE_LABELS.PERSON) {
+      const name = s.name || selfId;
+      const pid = s.id || `person:${name}`;
+      addNode(
+        makeNode(
+          pid,
+          NODE_LABELS.PERSON,
+          {
+            title: name,
+            name,
+            person_title: s.title || null,
+            department: s.department || null,
+            unit: s.unit || null,
+            specialization: s.specialization || null,
+            source_type: meta.source_type,
+          },
+          access
+        )
+      );
+      // Person → Unit
+      if (s.unit) {
+        const uid = `unit:${s.unit}`;
+        addNode(makeNode(uid, NODE_LABELS.UNIT, { name: s.unit }));
+        addEdge(pid, uid, RELATIONSHIPS.PART_OF);
+      }
+      // Person → Equipment they focus on (REFERENCES; equipment stub if unseen)
+      for (const eq of s.equipment_focus || []) {
+        ensureEquipment(eq, access);
+        addEdge(pid, eq, RELATIONSHIPS.REFERENCES);
+      }
+      continue; // people carry no artifact-style links; skip the rest
+    }
+
     // The artifact/equipment node itself.
     addNode(
       makeNode(
