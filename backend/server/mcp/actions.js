@@ -39,6 +39,40 @@ function extractEquipmentTag(text = '') {
   return m ? m[1] : null;
 }
 
+// Resolve WHO should be notified about a piece of equipment: the person who
+// owns/executed its work orders (preferring one with a login email so it lands
+// in a real inbox), plus the responsible department. Falls back to the
+// equipment's access-department when no specific person is known.
+async function resolveNotificationTarget(equipmentId) {
+  const access = await equipmentAccess(equipmentId);
+  const fallback = { recipient: access.department, person: null, department: access.department };
+  if (!equipmentId) return fallback;
+  const session = getSession();
+  try {
+    // A person linked to this equipment via the work orders they executed.
+    const r = await session.run(
+      `MATCH (p:Person)<-[:EXECUTED_BY]-(:WorkOrder)-[:PERFORMED_ON]->(e {id:$id})
+       RETURN p.name AS name, p.email AS email, p.department AS dept
+       ORDER BY (p.email IS NOT NULL) DESC
+       LIMIT 1`,
+      { id: equipmentId }
+    );
+    const rec = r.records[0];
+    if (rec) {
+      const email = rec.get('email');
+      const name = rec.get('name');
+      const dept = rec.get('dept') || access.department;
+      // Prefer a real email inbox; otherwise target the person's name/department.
+      return { recipient: email || dept, person: name, department: dept };
+    }
+  } catch (err) {
+    log.warn(`resolveNotificationTarget failed for ${equipmentId}: ${err.message}`);
+  } finally {
+    await session.close();
+  }
+  return fallback;
+}
+
 // ── 1. create_work_order ────────────────────────────────────────────
 export async function createWorkOrder(args, user) {
   const target = args.target || extractEquipmentTag(args.query || args.title || '');
@@ -59,15 +93,28 @@ export async function createWorkOrder(args, user) {
 // ── 2. draft_notification ───────────────────────────────────────────
 export async function draftNotification(args, user) {
   const target = args.target || extractEquipmentTag(args.query || '');
-  const recipient = args.recipient || 'engineering'; // role-based by default
+  // Route to the right person/team unless the caller named a recipient.
+  const resolved = args.recipient
+    ? { recipient: args.recipient, person: null, department: args.recipient }
+    : await resolveNotificationTarget(target);
   const title = args.title || (target ? `Attention needed: ${target}` : 'Plant notification');
   const body = args.body || args.query || 'Notification from AssetBrain.';
 
   await query(
     `INSERT INTO notifications (recipient, sender, title, body, related_to) VALUES ($1,$2,$3,$4,$5)`,
-    [recipient, user?.email, title, body, target]
+    [resolved.recipient, user?.email, title, body, target]
   );
-  return { mode: 'live', result: { recipient, title, related_to: target, status: 'delivered' } };
+  return {
+    mode: 'live',
+    result: {
+      recipient: resolved.recipient,
+      recipient_name: resolved.person,
+      department: resolved.department,
+      title,
+      related_to: target,
+      status: 'delivered',
+    },
+  };
 }
 
 // ── 3. generate_rca_report ──────────────────────────────────────────

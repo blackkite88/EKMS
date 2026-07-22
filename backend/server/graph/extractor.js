@@ -98,6 +98,7 @@ export function extractBackbone(documents) {
           {
             title: name,
             name,
+            email: s.email || null,
             person_title: s.title || null,
             department: s.department || null,
             unit: s.unit || null,

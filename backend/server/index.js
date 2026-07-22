@@ -26,6 +26,7 @@ import { errorHandler, notFound } from './middleware/errorHandler.js';
 
 import { initSchema, pingPostgres, closePostgres } from './config/postgres.js';
 import { seedUsers } from './auth/users.js';
+import { seedNotifications } from './data/seed-notifications.js';
 import { pingNeo4j, closeNeo4j } from './config/neo4j.js';
 import { pingChroma } from './config/chroma.js';
 
@@ -70,6 +71,7 @@ async function bootstrap() {
   try {
     await initSchema();
     await seedUsers();
+    await seedNotifications();
   } catch (err) {
     log.error(`Postgres init failed — auth will not work until Postgres is up: ${err.message}`);
   }

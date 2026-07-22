@@ -113,6 +113,7 @@ export interface Notification {
   related_to: string | null
   is_read: boolean
   created_at: string
+  direction?: 'sent' | 'received'
 }
 
 export interface ReportSummary {
