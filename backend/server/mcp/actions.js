@@ -43,16 +43,17 @@ function extractEquipmentTag(text = '') {
 // owns/executed its work orders (preferring one with a login email so it lands
 // in a real inbox), plus the responsible department. Falls back to the
 // equipment's access-department when no specific person is known.
-async function resolveNotificationTarget(equipmentId) {
+export async function resolveNotificationTarget(equipmentId) {
   const access = await equipmentAccess(equipmentId);
-  const fallback = { recipient: access.department, person: null, department: access.department };
+  const fallback = { recipient: access.department, person: null, department: access.department, title: null, specialization: null };
   if (!equipmentId) return fallback;
   const session = getSession();
   try {
     // A person linked to this equipment via the work orders they executed.
     const r = await session.run(
       `MATCH (p:Person)<-[:EXECUTED_BY]-(:WorkOrder)-[:PERFORMED_ON]->(e {id:$id})
-       RETURN p.name AS name, p.email AS email, p.department AS dept
+       RETURN p.name AS name, p.email AS email, p.department AS dept,
+              p.person_title AS title, p.specialization AS spec
        ORDER BY (p.email IS NOT NULL) DESC
        LIMIT 1`,
       { id: equipmentId }
@@ -63,7 +64,7 @@ async function resolveNotificationTarget(equipmentId) {
       const name = rec.get('name');
       const dept = rec.get('dept') || access.department;
       // Prefer a real email inbox; otherwise target the person's name/department.
-      return { recipient: email || dept, person: name, department: dept };
+      return { recipient: email || dept, person: name, department: dept, title: rec.get('title'), specialization: rec.get('spec') };
     }
   } catch (err) {
     log.warn(`resolveNotificationTarget failed for ${equipmentId}: ${err.message}`);

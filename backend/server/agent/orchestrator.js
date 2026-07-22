@@ -18,6 +18,7 @@ import { RCA_SYSTEM_PROMPT, buildRcaContext, gatherRca } from './rca.js';
 import { COMPLIANCE_SYSTEM_PROMPT, buildComplianceContext, gatherCompliance, detectComplianceGaps } from './compliance.js';
 import { buildMemoryContext, recordTurn } from './memory.js';
 import { canPerform } from '../auth/action-policy.js';
+import { resolveNotificationTarget } from '../mcp/actions.js';
 import { writeAudit } from '../middleware/auditLogger.js';
 import { createLogger } from '../utils/logger.js';
 
@@ -84,6 +85,35 @@ function teamScopeOf(query) {
   const q = query.toLowerCase();
   const m = q.match(/\b(maintenance|operations|engineering|safety|inspection|management|unit-1|unit-2|qa|team-a|team-b)\b/);
   return m ? m[1] : null;
+}
+
+// Extract a real equipment tag (P-101, HX-205, ...) from free text, if present.
+function extractEquipmentTagLoose(text = '') {
+  const m = String(text).match(/\b((?:P|HX|C|V|T|F|K)-\d{2,4})\b/);
+  return m ? m[1] : null;
+}
+
+// Known assignable people/teams (by surname/handle) for detecting whether a
+// work-order request already names an assignee.
+const KNOWN_ASSIGNEES = /\b(kulkarni|iyer|nair|bose|yadav|krishnan|rao|deshmukh|team-?a|team-?b|ops team|qa team|maintenance|operations|engineering|inspection|safety)\b/i;
+
+// Does the message explicitly name who to assign to, or confirm a suggestion?
+function messageNamesAssignee(message) {
+  const q = message.toLowerCase();
+  if (/\b(assign|give|to|for)\b.*\b(kulkarni|iyer|nair|bose|yadav|krishnan|rao|deshmukh|team|ops|qa)\b/.test(q)) return true;
+  return KNOWN_ASSIGNEES.test(message);
+}
+
+// A short confirmation of a prior suggestion ("yes", "sure", "go ahead").
+function isAffirmative(message) {
+  return /^\s*(yes|yep|yeah|sure|ok|okay|go ahead|do it|sounds good|that works|confirm|proceed)\b/i.test(message.trim());
+}
+
+// The user bounced the "who" question back at us ("who's best?", "you decide").
+function asksWhoIsBest(message) {
+  const q = message.toLowerCase();
+  return /\bwho('?s| is| would be| should)?\b.*\b(best|right|good|suited|ideal|match|fit|handle|assign|do it)\b/.test(q)
+    || /\b(you (decide|choose|pick)|recommend someone|your call|whoever)\b/.test(q);
 }
 
 // True when the request references a compliance gap but doesn't say WHICH one
@@ -192,10 +222,15 @@ export async function runQuery({ query: message, user, sessionId, stream }) {
     }
 
     // Clarify vague "compliance gap" references BEFORE proposing an action.
-    // If the request is about "a/one/some compliance gap" without naming which
-    // (no specific regulation/equipment), show the gaps and ask which one — so
-    // the action targets a real gap rather than a hand-wave.
-    if (mentionsUnspecifiedComplianceGap(message)) {
+    // A valid equipment tag on the action, if any (ignore stray words the router
+    // may have put in `target`, e.g. the literal phrase "compliance gap").
+    const equipTag = (routed.target && /^[A-Z]{1,2}-\d{2,4}$/.test(routed.target))
+      ? routed.target
+      : (extractEquipmentTagLoose(searchQuery) || extractEquipmentTagLoose(message));
+
+    // STEP 1 — clarify WHICH compliance gap, if the request is vague about it
+    // and we don't yet have a specific equipment to act on.
+    if (mentionsUnspecifiedComplianceGap(message) && !equipTag) {
       let gaps = [];
       try { gaps = await detectComplianceGaps(user); } catch (err) { log.warn(`gap detect failed: ${err.message}`); }
       if (gaps.length > 0) {
@@ -203,8 +238,7 @@ export async function runQuery({ query: message, user, sessionId, stream }) {
         const list = gaps.slice(0, 8).map((g, i) =>
           `${i + 1}. **${g.equipment}** — ${g.activity} (${g.regulation})${g.overdue_days != null ? `, ${g.overdue_days}d overdue` : ''}`
         ).join('\n');
-        const who = routed.target ? ` for **${routed.target}**` : '';
-        const clarify = `There are ${gaps.length} open compliance gaps. Which one${who} should I act on?\n\n${list}\n\nTell me which gap (by equipment or number) and I'll propose the action.`;
+        const clarify = `There are ${gaps.length} open compliance gaps. Which one should I act on?\n\n${list}\n\nTell me which gap (by equipment or number) and I'll set up the action.`;
         stream.text(clarify);
         await recordTurn(sessionId, user.email, 'user', message);
         await recordTurn(sessionId, user.email, 'assistant', clarify);
@@ -213,14 +247,35 @@ export async function runQuery({ query: message, user, sessionId, stream }) {
       }
     }
 
-    const proposal = actionProposalText(routed.action, routed.target, message);
+    // STEP 2 — for a work order with a target but no named assignee, ask WHO to
+    // assign it to, suggesting the best match from the graph. Skip if the user
+    // already named someone, confirmed a prior suggestion ("yes"), or the
+    // conversation already discussed the assignee (so we don't loop).
+    const assigneeSettled = messageNamesAssignee(message) || isAffirmative(message) || asksWhoIsBest(message)
+      || /\b(assign|to them|to him|to her|go with)\b/i.test(message);
+    if (routed.action === 'create_work_order' && equipTag && !assigneeSettled) {
+      let owner = null;
+      try { owner = await resolveNotificationTarget(equipTag); } catch (err) { log.warn(`owner resolve failed: ${err.message}`); }
+      if (owner && owner.person) {
+        const role = [owner.title, owner.specialization].filter(Boolean).join(', ');
+        const ask = `Who should I assign the **${equipTag}** work order to? Based on the records, **${owner.person}**${role ? ` (${role})` : ''} is the best match — they own ${equipTag}.\n\nReply with a name to assign it, say **yes** to go with ${owner.person}, or ask **"who's the best person for this?"** and I'll explain.`;
+        stream.text(ask);
+        await recordTurn(sessionId, user.email, 'user', message);
+        await recordTurn(sessionId, user.email, 'assistant', ask);
+        stream.done({ elapsedMs: Date.now() - startedAt });
+        return;
+      }
+    }
+
+    // STEP 3 — propose the action (assignee resolved: an explicit name, an
+    // affirmative to the suggestion, or the equipment owner).
+    const proposal = actionProposalText(routed.action, equipTag || routed.target, message);
     stream.text(proposal);
-    // Offer the proposed action (pre-filled) plus any sensible companions.
     stream.send({
       type: 'proposed_action',
       action: routed.action,
-      target: routed.target || null,
-      args: { target: routed.target || null, query: searchQuery, request: message },
+      target: equipTag || routed.target || null,
+      args: { target: equipTag || routed.target || null, query: searchQuery, request: message },
     });
     stream.send({ type: 'suggested_actions', actions: proposedActionSet(routed.action) });
     await recordTurn(sessionId, user.email, 'user', message);
