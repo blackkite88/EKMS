@@ -9,13 +9,16 @@ const router = Router();
 router.get('/', optionalAuth, async (_req, res, next) => {
   try {
     const files = await scanDataFiles();
-    const counts = { emails: 0, meetings: 0, tickets: 0, docs: 0, github: 0, other: 0 };
+    // Count by the ACTUAL industrial source type (the data/ subfolder), so the
+    // response reflects the real corpus — equipment, workorders, inspections,
+    // failures, manuals, procedures, regulations, logs, people — rather than a
+    // fixed category whitelist.
+    const counts = {};
     for (const file of files) {
       const type = getSourceType(file);
-      if (counts[type] !== undefined) counts[type]++;
-      else counts.other++;
+      counts[type] = (counts[type] || 0) + 1;
     }
-    const total = Object.values(counts).reduce((a, b) => a + b, 0);
+    const total = files.length;
     res.json({ ...counts, total });
   } catch (err) {
     next(err);
