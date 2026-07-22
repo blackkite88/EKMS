@@ -1,12 +1,13 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Bell, ClipboardList, Factory, LogOut, Menu, MessageSquareText, Network, ShieldCheck, X } from 'lucide-react'
+import { Bell, ClipboardList, Factory, FileText, LogOut, Menu, MessageSquareText, Network, ShieldCheck, X } from 'lucide-react'
 import { ChatPanel } from '@/components/chat-panel'
 import { GraphCanvas } from '@/components/graph-canvas'
 import { WorkOrdersPage } from '@/components/work-orders-page'
 import { NotificationsPage } from '@/components/notifications-page'
 import { CompliancePage } from '@/components/compliance-page'
+import { ReportsPage } from '@/components/reports-page'
 import { DocumentDrawer } from '@/components/document-drawer'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -17,12 +18,13 @@ import { useAuth } from '@/lib/auth-context'
 import { api } from '@/lib/api'
 import type { AuthUser } from '@/lib/types'
 
-type View = 'ask' | 'graph' | 'workorders' | 'notifications' | 'compliance'
+type View = 'ask' | 'graph' | 'workorders' | 'notifications' | 'compliance' | 'reports'
 
 const navItems = [
   { id: 'ask' as const, label: 'Copilot', icon: MessageSquareText },
   { id: 'graph' as const, label: 'Knowledge Graph', icon: Network },
   { id: 'workorders' as const, label: 'Work Orders', icon: ClipboardList },
+  { id: 'reports' as const, label: 'Reports', icon: FileText },
   { id: 'notifications' as const, label: 'Notifications', icon: Bell },
   { id: 'compliance' as const, label: 'Compliance', icon: ShieldCheck },
 ]
@@ -90,6 +92,7 @@ export function Dashboard({ user, onLogout }: { user: AuthUser; onLogout: () => 
           {view === 'graph' && <GraphCanvas full />}
         </GraphStreamProvider>
         {view === 'workorders' && <WorkOrdersPage />}
+        {view === 'reports' && <ReportsPage />}
         {view === 'notifications' && <NotificationsPage onChanged={() => token && api.notifications(token).then((r) => setUnread(r.unread))} />}
         {view === 'compliance' && <CompliancePage onOpenDocument={setOpenDoc} />}
       </div>
