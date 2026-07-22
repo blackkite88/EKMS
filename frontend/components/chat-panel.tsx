@@ -10,6 +10,7 @@ import { api, streamQuery, ApiError } from '@/lib/api'
 import { useAuth } from '@/lib/auth-context'
 import { useGraphStream } from '@/lib/graph-stream-context'
 import { ACTION_META, type ChatMessage, type Citation } from '@/lib/types'
+import ReactMarkdown from 'react-markdown'
 
 const CITATION_RE = /\[(EQUIPMENT|WO|INSPECTION|FAILURE|MANUAL|PROCEDURE|REGULATION|LOG)\s*\|\s*([^\]]+)\]/gi
 
@@ -43,13 +44,38 @@ const EMPTY_MSG = (id: string, role: 'user' | 'assistant', text: string): ChatMe
 
 export function ChatPanel({ onOpenDocument }: { onOpenDocument?: (id: string) => void }) {
   const { user, token } = useAuth()
-  const { reset, applyEvent } = useGraphStream()
+  const { reset, applyEvent, setHoveredNode } = useGraphStream()
   const [question, setQuestion] = useState('')
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [streaming, setStreaming] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const sessionIdRef = useRef(`sess_${Date.now()}`)
   const permitted = user?.permittedActions || []
+
+  // Load chat memory from sessionStorage on mount
+  useEffect(() => {
+    const savedMessages = sessionStorage.getItem('chat_messages')
+    const savedSessionId = sessionStorage.getItem('chat_session_id')
+    if (savedMessages) {
+      try {
+        setMessages(JSON.parse(savedMessages))
+      } catch (e) {
+        // ignore errors
+      }
+    }
+    if (savedSessionId) {
+      sessionIdRef.current = savedSessionId
+    } else {
+      sessionStorage.setItem('chat_session_id', sessionIdRef.current)
+    }
+  }, [])
+
+  // Save chat memory whenever messages update
+  useEffect(() => {
+    if (messages.length > 0) {
+      sessionStorage.setItem('chat_messages', JSON.stringify(messages))
+    }
+  }, [messages])
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
@@ -192,8 +218,8 @@ export function ChatPanel({ onOpenDocument }: { onOpenDocument?: (id: string) =>
                   </p>
                 )}
 
-                <div className="rounded-2xl rounded-tl-sm border bg-card p-5 text-sm leading-relaxed whitespace-pre-wrap">
-                  {msg.text ? renderWithCitations(msg.text, onOpenDocument) : msg.streaming ? (
+                <div className="rounded-2xl rounded-tl-sm border bg-card p-5 text-sm leading-relaxed [&>p:not(:last-child)]:mb-4 [&>ul]:mb-4 [&>ul]:list-disc [&>ul]:pl-5 [&>ol]:mb-4 [&>ol]:list-decimal [&>ol]:pl-5 [&>li]:mb-1">
+                  {msg.text ? renderWithCitations(msg.text, onOpenDocument, setHoveredNode) : msg.streaming ? (
                     <span className="flex items-center gap-2 text-muted-foreground"><Loader2 className="size-4 animate-spin" /> Reasoning…</span>
                   ) : null}
                   {msg.streaming && msg.text && (
@@ -229,7 +255,14 @@ export function ChatPanel({ onOpenDocument }: { onOpenDocument?: (id: string) =>
                 {msg.citations.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {msg.citations.map((c) => (
-                      <button key={c.id} onClick={() => onOpenDocument?.(c.id)} className="inline-flex items-center gap-1 rounded border bg-transparent px-2 py-0.5 font-mono text-[11px] text-primary transition-colors hover:bg-primary/10">
+                      <button 
+                        key={c.id} 
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); onOpenDocument?.(c.id); }} 
+                        onMouseEnter={() => setHoveredNode(c.id)}
+                        onMouseLeave={() => setHoveredNode(null)}
+                        className="inline-flex items-center gap-1 rounded border bg-transparent px-2 py-0.5 font-mono text-[11px] text-primary transition-colors hover:bg-primary/10"
+                      >
                         <FileText className="size-3" />[{c.tag} | {c.id}]
                       </button>
                     ))}
@@ -298,22 +331,32 @@ export function ChatPanel({ onOpenDocument }: { onOpenDocument?: (id: string) =>
   )
 }
 
-function renderWithCitations(text: string, onOpen?: (id: string) => void) {
-  const parts: (string | { tag: string; id: string })[] = []
-  let last = 0
-  let m: RegExpExecArray | null
-  CITATION_RE.lastIndex = 0
-  while ((m = CITATION_RE.exec(text)) !== null) {
-    if (m.index > last) parts.push(text.slice(last, m.index))
-    parts.push({ tag: m[1].toUpperCase(), id: m[2].trim() })
-    last = m.index + m[0].length
-  }
-  if (last < text.length) parts.push(text.slice(last))
-  return parts.map((p, i) =>
-    typeof p === 'string' ? <span key={i}>{p}</span> : (
-      <button key={i} onClick={() => onOpen?.(p.id)} className="mx-0.5 inline-flex items-center rounded bg-primary/10 px-1 font-mono text-[11px] text-primary hover:bg-primary/20">
-        [{p.tag} | {p.id}]
-      </button>
-    ),
+function renderWithCitations(text: string, onOpen?: (id: string) => void, onHover?: (id: string | null) => void) {
+  const processedText = text.replace(CITATION_RE, '[$1 | $2](citation://$2)')
+
+  return (
+    <ReactMarkdown
+      components={{
+        a: ({ href, children }) => {
+          if (href?.startsWith('citation://')) {
+            const id = href.replace('citation://', '')
+            return (
+              <button 
+                type="button"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); onOpen?.(id); }} 
+                onMouseEnter={() => onHover?.(id)}
+                onMouseLeave={() => onHover?.(null)}
+                className="mx-0.5 inline-flex items-center rounded bg-primary/10 px-1 font-mono text-[11px] text-primary hover:bg-primary/20"
+              >
+                [{children}]
+              </button>
+            )
+          }
+          return <a href={href} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-primary underline">{children}</a>
+        }
+      }}
+    >
+      {processedText}
+    </ReactMarkdown>
   )
 }

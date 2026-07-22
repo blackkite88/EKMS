@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import cytoscape, { type Core, type ElementDefinition } from 'cytoscape'
+import * as d3 from 'd3'
 import { Loader2, Network } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { useAuth } from '@/lib/auth-context'
@@ -11,8 +11,8 @@ import type { GraphResponse } from '@/lib/types'
 
 // Colors per node label (kept in sync with the backend's node tiers).
 const LABEL_COLOR: Record<string, string> = {
-  Equipment: '#f59e0b', // amber hub — the central entity
-  FailureReport: '#ef4444', // red — failures
+  Equipment: '#f59e0b', // amber hub
+  FailureReport: '#ef4444', // red
   FailureMode: '#fb7185', // rose
   Inspection: '#a78bfa', // violet
   WorkOrder: '#60a5fa', // blue
@@ -24,92 +24,35 @@ const LABEL_COLOR: Record<string, string> = {
   Unit: '#c084fc', // purple
 }
 
-// Typed loosely: the cytoscape @types union for stylesheets is awkward to
-// satisfy across versions; the object shape below is the documented CSS form.
-const cyStyle = [
-  {
-    selector: 'node',
-    style: {
-      'background-color': '#1e293b',
-      'border-width': 1,
-      'border-color': '#334155',
-      label: 'data(shortLabel)',
-      color: '#64748b',
-      'font-size': '7px',
-      'text-valign': 'bottom',
-      'text-margin-y': 3,
-      width: 14,
-      height: 14,
-      'transition-property': 'background-color, border-color, width, height, opacity',
-      'transition-duration': 0.25 as unknown as string,
-      opacity: 0.35,
-    },
-  },
-  {
-    selector: 'node.active',
-    style: {
-      'background-color': 'data(color)',
-      'border-color': 'data(color)',
-      'border-width': 2,
-      color: '#e2e8f0',
-      'font-size': '9px',
-      width: 26,
-      height: 26,
-      opacity: 1,
-    },
-  },
-  {
-    selector: 'node.seed',
-    style: {
-      width: 36,
-      height: 36,
-      'border-width': 3,
-      'font-size': '10px',
-    },
-  },
-  {
-    selector: 'node.highlighted',
-    style: {
-      'border-color': '#fde047',
-      'border-width': 4,
-    },
-  },
-  {
-    selector: 'edge',
-    style: {
-      width: 1,
-      'line-color': '#1e293b',
-      'target-arrow-color': '#1e293b',
-      'target-arrow-shape': 'triangle',
-      'arrow-scale': 0.6,
-      'curve-style': 'bezier',
-      opacity: 0.15,
-      'transition-property': 'line-color, opacity, width',
-      'transition-duration': 0.25 as unknown as string,
-    },
-  },
-  {
-    selector: 'edge.active',
-    style: {
-      width: 2.5,
-      'line-color': '#38bdf8',
-      'target-arrow-color': '#38bdf8',
-      label: 'data(relation)',
-      'font-size': '7px',
-      color: '#7dd3fc',
-      'text-rotation': 'autorotate',
-      opacity: 0.9,
-    },
-  },
-]
+interface NodeDatum extends d3.SimulationNodeDatum {
+  id: string
+  label: string
+  title: string
+  shortLabel: string
+  color: string
+}
+
+interface EdgeDatum extends d3.SimulationLinkDatum<NodeDatum> {
+  id: string
+  relation: string
+  source: string | NodeDatum
+  target: string | NodeDatum
+}
 
 export function GraphCanvas({ full = false }: { full?: boolean }) {
   const { token } = useAuth()
   const { live } = useGraphStream()
   const containerRef = useRef<HTMLDivElement>(null)
-  const cyRef = useRef<Core | null>(null)
+  const svgRef = useRef<SVGSVGElement>(null)
+  
   const [graph, setGraph] = useState<GraphResponse | null>(null)
   const [loading, setLoading] = useState(true)
+
+  const simulationRef = useRef<d3.Simulation<NodeDatum, EdgeDatum> | null>(null)
+  const nodesMapRef = useRef<Map<string, NodeDatum>>(new Map())
+  const zoomBehaviorRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null)
+  
+  const updateStylesRef = useRef<(currentLive: typeof live) => void>(() => {})
 
   // Load the full (access-filtered) graph backdrop once.
   useEffect(() => {
@@ -121,66 +64,234 @@ export function GraphCanvas({ full = false }: { full?: boolean }) {
       .finally(() => setLoading(false))
   }, [token])
 
-  // Initialize Cytoscape when the graph data arrives.
+  // Initialize D3 graph
   useEffect(() => {
-    if (!graph || !containerRef.current) return
+    if (!graph || !svgRef.current || !containerRef.current) return
+    
+    const svg = d3.select(svgRef.current)
+    svg.selectAll('*').remove()
 
-    const elements: ElementDefinition[] = [
-      ...graph.nodes.map((n) => ({
-        data: {
-          id: n.id,
-          shortLabel: n.title?.slice(0, 22) || n.id,
-          color: LABEL_COLOR[n.label] || '#94a3b8',
-          nodeLabel: n.label,
-        },
-      })),
-      ...graph.edges
-        // only edges whose endpoints exist as nodes
-        .filter((e) => graph.nodes.some((n) => n.id === e.from) && graph.nodes.some((n) => n.id === e.to))
-        .map((e) => ({
-          data: { id: `${e.from}->${e.to}:${e.relation}`, source: e.from, target: e.to, relation: e.relation },
-        })),
-    ]
+    const width = containerRef.current.clientWidth || 800
+    const height = containerRef.current.clientHeight || 600
 
-    const cy = cytoscape({
-      container: containerRef.current,
-      elements,
-      style: cyStyle as cytoscape.CytoscapeOptions['style'],
-      layout: { name: 'cose', animate: false, nodeRepulsion: () => 8000, idealEdgeLength: () => 60, padding: 20 },
-      minZoom: 0.2,
-      maxZoom: 3,
-      wheelSensitivity: 0.2,
+    const container = svg.append('g').attr('class', 'graph-container')
+
+    // Setup Zoom
+    const zoom = d3.zoom<SVGSVGElement, unknown>()
+      .scaleExtent([0.1, 4])
+      .on('zoom', (event) => {
+        container.attr('transform', event.transform)
+      })
+    svg.call(zoom)
+    zoomBehaviorRef.current = zoom
+
+    // Prepare data
+    const nodes: NodeDatum[] = graph.nodes.map(n => ({
+      ...n,
+      shortLabel: n.title?.slice(0, 22) || n.id,
+      color: LABEL_COLOR[n.label] || '#94a3b8'
+    }))
+    
+    const nodeMap = new Map(nodes.map(n => [n.id, n]))
+    nodesMapRef.current = nodeMap
+
+    const edges: EdgeDatum[] = graph.edges
+      .filter(e => nodeMap.has(e.from) && nodeMap.has(e.to))
+      .map(e => ({
+        id: `${e.from}->${e.to}:${e.relation}`,
+        source: e.from,
+        target: e.to,
+        relation: e.relation
+      }))
+
+    // Setup Simulation
+    const simulation = d3.forceSimulation<NodeDatum, EdgeDatum>(nodes)
+      .force('link', d3.forceLink<NodeDatum, EdgeDatum>(edges).id(d => d.id).distance(80))
+      .force('charge', d3.forceManyBody().strength(-400))
+      .force('center', d3.forceCenter(width / 2, height / 2))
+      .force('x', d3.forceX(width / 2).strength(0.03))
+      .force('y', d3.forceY(height / 2).strength(0.03))
+      .alphaDecay(0.02)
+
+    simulationRef.current = simulation
+
+    // Setup Markers
+    const defs = svg.append('defs')
+    
+    defs.append('marker')
+      .attr('id', 'arrow-inactive')
+      .attr('viewBox', '0 -5 10 10')
+      .attr('refX', 18)
+      .attr('refY', 0)
+      .attr('markerWidth', 5)
+      .attr('markerHeight', 5)
+      .attr('orient', 'auto')
+      .append('path')
+      .attr('fill', '#1e293b')
+      .attr('d', 'M0,-5L10,0L0,5')
+
+    defs.append('marker')
+      .attr('id', 'arrow-active')
+      .attr('viewBox', '0 -5 10 10')
+      .attr('refX', 28)
+      .attr('refY', 0)
+      .attr('markerWidth', 6)
+      .attr('markerHeight', 6)
+      .attr('orient', 'auto')
+      .append('path')
+      .attr('fill', '#38bdf8')
+      .attr('d', 'M0,-5L10,0L0,5')
+
+    // Draw Edges
+    const link = container.append('g')
+      .attr('class', 'links')
+      .selectAll('line')
+      .data(edges)
+      .enter().append('line')
+      .attr('stroke', '#1e293b')
+      .attr('stroke-width', 1)
+      .attr('opacity', 0.15)
+      .attr('marker-end', 'url(#arrow-inactive)')
+
+    // Draw Edge Labels
+    const edgeLabels = container.append('g')
+      .attr('class', 'edge-labels')
+      .selectAll('text')
+      .data(edges)
+      .enter().append('text')
+      .text(d => d.relation)
+      .attr('font-size', '5px')
+      .attr('fill', '#475569')
+      .attr('text-anchor', 'middle')
+      .style('pointer-events', 'none')
+      .attr('opacity', 0.4)
+
+    // Draw Nodes
+    const nodeGroup = container.append('g')
+      .attr('class', 'nodes')
+      .selectAll('g')
+      .data(nodes)
+      .enter().append('g')
+
+    const circles = nodeGroup.append('circle')
+      .attr('r', 7)
+      .attr('fill', d => d.color)
+      .attr('stroke', '#334155')
+      .attr('stroke-width', 1)
+      .attr('opacity', 0.4)
+      
+    // Labels
+    const labels = nodeGroup.append('text')
+      .text(d => d.shortLabel)
+      .attr('font-size', '7px')
+      .attr('fill', '#94a3b8')
+      .attr('dy', 14)
+      .attr('text-anchor', 'middle')
+      .style('pointer-events', 'none')
+      .attr('opacity', 0.7)
+
+    simulation.on('tick', () => {
+      link
+        .attr('x1', d => (d.source as NodeDatum).x!)
+        .attr('y1', d => (d.source as NodeDatum).y!)
+        .attr('x2', d => (d.target as NodeDatum).x!)
+        .attr('y2', d => (d.target as NodeDatum).y!)
+
+      edgeLabels
+        .attr('x', d => ((d.source as NodeDatum).x! + (d.target as NodeDatum).x!) / 2)
+        .attr('y', d => ((d.source as NodeDatum).y! + (d.target as NodeDatum).y!) / 2 - 3)
+
+      nodeGroup.attr('transform', d => `translate(${d.x},${d.y})`)
     })
-    cyRef.current = cy
+
+    // Drag behavior
+    nodeGroup.call(d3.drag<SVGGElement, NodeDatum>()
+      .on('start', (event, d) => {
+        if (!event.active) simulation.alphaTarget(0.3).restart()
+        d.fx = d.x
+        d.fy = d.y
+      })
+      .on('drag', (event, d) => {
+        d.fx = event.x
+        d.fy = event.y
+      })
+      .on('end', (event, d) => {
+        if (!event.active) simulation.alphaTarget(0)
+        d.fx = null
+        d.fy = null
+      })
+    )
+
+    // Define style updater for live traversal
+    updateStylesRef.current = (currentLive) => {
+      const activeNodeIds = currentLive.activeNodeIds
+      const highlightedNodeIds = currentLive.highlightedNodeIds
+      const seedIds = currentLive.seedIds
+      const hoveredNodeId = currentLive.hoveredNodeId
+      
+      const activeEdges = new Set(currentLive.activeEdges.map((e) => `${e.from}->${e.to}:${e.relation}`))
+
+      circles.transition().duration(250)
+        .attr('fill', d => d.color)
+        .attr('stroke', d => highlightedNodeIds.has(d.id) || d.id === hoveredNodeId ? '#fde047' : activeNodeIds.has(d.id) ? d.color : '#334155')
+        .attr('stroke-width', d => highlightedNodeIds.has(d.id) || d.id === hoveredNodeId ? 4 : seedIds.has(d.id) ? 3 : activeNodeIds.has(d.id) ? 2 : 1)
+        .attr('r', d => seedIds.has(d.id) || d.id === hoveredNodeId ? 18 : activeNodeIds.has(d.id) ? 13 : 7)
+        .attr('opacity', d => activeNodeIds.has(d.id) || highlightedNodeIds.has(d.id) || d.id === hoveredNodeId ? 1 : 0.4)
+
+      labels.transition().duration(250)
+        .attr('font-size', d => seedIds.has(d.id) ? '10px' : activeNodeIds.has(d.id) ? '9px' : '7px')
+        .attr('fill', d => activeNodeIds.has(d.id) ? '#f8fafc' : '#94a3b8')
+        .attr('dy', d => seedIds.has(d.id) ? 26 : activeNodeIds.has(d.id) ? 20 : 14)
+        .attr('opacity', d => activeNodeIds.has(d.id) ? 1 : 0.7)
+
+      link.transition().duration(250)
+        .attr('stroke', d => activeEdges.has(d.id) ? '#38bdf8' : '#1e293b')
+        .attr('stroke-width', d => activeEdges.has(d.id) ? 2.5 : 1)
+        .attr('opacity', d => activeEdges.has(d.id) ? 0.9 : 0.15)
+        .attr('marker-end', d => activeEdges.has(d.id) ? 'url(#arrow-active)' : 'url(#arrow-inactive)')
+        
+      edgeLabels.transition().duration(250)
+        .attr('fill', d => activeEdges.has(d.id) ? '#7dd3fc' : '#475569')
+        .attr('font-size', d => activeEdges.has(d.id) ? '7px' : '5px')
+        .attr('opacity', d => activeEdges.has(d.id) ? 1 : 0.4)
+    }
 
     return () => {
-      cy.destroy()
-      cyRef.current = null
+      simulation.stop()
     }
-  }, [graph])
+  }, [graph]) // Rebuild on new graph data
 
   // React to live traversal state — light up active nodes/edges.
   useEffect(() => {
-    const cy = cyRef.current
-    if (!cy) return
+    if (!simulationRef.current || !updateStylesRef.current) return
+    
+    updateStylesRef.current(live)
 
-    cy.batch(() => {
-      cy.nodes().forEach((n) => {
-        const id = n.id()
-        n.toggleClass('active', live.activeNodeIds.has(id))
-        n.toggleClass('seed', live.seedIds.has(id))
-        n.toggleClass('highlighted', live.highlightedNodeIds.has(id))
+    // Gently center on the active subgraph as it grows
+    if (live.activeNodeIds.size > 0 && svgRef.current && containerRef.current && zoomBehaviorRef.current && nodesMapRef.current) {
+      let sumX = 0, sumY = 0, count = 0
+      live.activeNodeIds.forEach(id => {
+        const node = nodesMapRef.current.get(id)
+        if (node && node.x !== undefined && node.y !== undefined) {
+          sumX += node.x
+          sumY += node.y
+          count++
+        }
       })
-      const activeEdgeKeys = new Set(live.activeEdges.map((e) => `${e.from}->${e.to}:${e.relation}`))
-      cy.edges().forEach((e) => {
-        e.toggleClass('active', activeEdgeKeys.has(e.id()))
-      })
-    })
-
-    // Gently center on the active subgraph as it grows.
-    if (live.activeNodeIds.size > 0) {
-      const active = cy.nodes().filter((n) => live.activeNodeIds.has(n.id()))
-      if (active.length > 0) cy.animate({ fit: { eles: active, padding: 80 } }, { duration: 400 })
+      
+      if (count > 0) {
+        const avgX = sumX / count
+        const avgY = sumY / count
+        
+        const width = containerRef.current.clientWidth
+        const height = containerRef.current.clientHeight
+        
+        const svg = d3.select(svgRef.current)
+        svg.transition().duration(750).call(
+          zoomBehaviorRef.current.transform,
+          d3.zoomIdentity.translate(width / 2 - avgX * 1.2, height / 2 - avgY * 1.2).scale(1.2)
+        )
+      }
     }
   }, [live])
 
@@ -221,7 +332,9 @@ export function GraphCanvas({ full = false }: { full?: boolean }) {
             <p className="text-xs text-muted-foreground">No accessible graph nodes</p>
           </div>
         )}
-        <div ref={containerRef} className="h-full w-full" />
+        <div ref={containerRef} className="h-full w-full">
+          <svg ref={svgRef} className="h-full w-full cursor-grab active:cursor-grabbing" />
+        </div>
         <div className="pointer-events-none absolute right-3 bottom-3 font-mono text-[10px] text-muted-foreground">
           {activeCount} ACTIVE · {edgeCount} EDGES
           {live.blockedCount > 0 && <span className="text-destructive"> · {live.blockedCount} BLOCKED</span>}
