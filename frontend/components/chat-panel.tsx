@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { streamQuery, ApiError } from '@/lib/api'
+import { api, streamQuery, ApiError } from '@/lib/api'
 import { useAuth } from '@/lib/auth-context'
 import { useGraphStream } from '@/lib/graph-stream-context'
 import { ACTION_META, type ChatMessage, type Citation } from '@/lib/types'
@@ -36,8 +36,9 @@ function initialsOf(name: string) {
 }
 
 const EMPTY_MSG = (id: string, role: 'user' | 'assistant', text: string): ChatMessage => ({
-  id, role, text, citations: [], toolCalls: [], suggestedActions: [], confidence: null,
-  complianceGaps: [], routing: null, elapsedMs: null, streaming: role === 'assistant',
+  id, role, text, citations: [], toolCalls: [], suggestedActions: [], proposedAction: null,
+  actionResults: [], confidence: null, complianceGaps: [], routing: null, elapsedMs: null,
+  streaming: role === 'assistant',
 })
 
 export function ChatPanel({ onOpenDocument }: { onOpenDocument?: (id: string) => void }) {
@@ -82,6 +83,9 @@ export function ChatPanel({ onOpenDocument }: { onOpenDocument?: (id: string) =>
           case 'suggested_actions':
             patch((m) => ({ ...m, suggestedActions: event.actions }))
             break
+          case 'proposed_action':
+            patch((m) => ({ ...m, proposedAction: { action: event.action, target: event.target, args: event.args } }))
+            break
           case 'compliance_gaps':
             patch((m) => ({ ...m, complianceGaps: event.gaps }))
             break
@@ -115,11 +119,33 @@ export function ChatPanel({ onOpenDocument }: { onOpenDocument?: (id: string) =>
     }
   }
 
-  // Clicking an action tile sends a natural-language request; the backend router
-  // + permission gate handle it (and deny if the role isn't allowed).
-  function runAction(action: string) {
+  // Clicking an action tile EXECUTES the action via the dedicated endpoint —
+  // this is the only place an action actually runs (the AI only proposes). The
+  // result is attached to that message so the user sees the confirmation inline.
+  async function runAction(messageId: string, action: string, args: Record<string, unknown>) {
+    if (!token) return
     const label = ACTION_META[action]?.label || action
-    send(label + ' based on what we just discussed')
+    const patchMsg = (fn: (m: ChatMessage) => ChatMessage) =>
+      setMessages((prev) => prev.map((m) => (m.id === messageId ? fn(m) : m)))
+
+    patchMsg((m) => ({ ...m, actionResults: [...m.actionResults, { label, status: 'running', message: `Running ${label}…` }] }))
+    try {
+      const res = await api.executeAction(token, action, args)
+      patchMsg((m) => ({
+        ...m,
+        actionResults: m.actionResults.map((r) =>
+          r.label === label && r.status === 'running' ? { label, status: 'done', message: res.message } : r,
+        ),
+      }))
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : 'Action failed'
+      patchMsg((m) => ({
+        ...m,
+        actionResults: m.actionResults.map((r) =>
+          r.label === label && r.status === 'running' ? { label, status: 'denied', message } : r,
+        ),
+      }))
+    }
   }
 
   return (
@@ -191,14 +217,11 @@ export function ChatPanel({ onOpenDocument }: { onOpenDocument?: (id: string) =>
                   </div>
                 )}
 
-                {/* tool calls (actions taken) */}
-                {msg.toolCalls.map((tc, i) => (
-                  <div key={i} className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs ${tc.mode === 'denied' ? 'border-destructive/30 bg-destructive/5' : 'border-primary/20 bg-primary/5'}`}>
-                    <Wrench className="size-3.5 text-primary" aria-hidden="true" />
-                    <span className="font-mono font-medium">{ACTION_META[tc.name]?.label || tc.name}</span>
-                    <Badge variant={tc.mode === 'denied' ? 'destructive' : 'outline'} className="ml-auto font-mono text-[10px]">
-                      {tc.mode === 'pending' ? 'running…' : tc.mode === 'denied' ? 'not permitted' : (tc.result as { wo_number?: string; report_id?: number })?.wo_number || `#${(tc.result as { report_id?: number })?.report_id ?? ''}` || tc.mode}
-                    </Badge>
+                {/* action results — shown AFTER the user clicks a tile */}
+                {msg.actionResults.map((ar, i) => (
+                  <div key={i} className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs ${ar.status === 'denied' ? 'border-destructive/30 bg-destructive/5' : 'border-primary/20 bg-primary/5'}`}>
+                    {ar.status === 'running' ? <Loader2 className="size-3.5 animate-spin text-primary" /> : <Wrench className="size-3.5 text-primary" />}
+                    <span>{ar.message}</span>
                   </div>
                 ))}
 
@@ -226,13 +249,20 @@ export function ChatPanel({ onOpenDocument }: { onOpenDocument?: (id: string) =>
                   </div>
                 )}
 
-                {/* contextual action tiles (only permitted actions) */}
+                {/* contextual action tiles — clicking one EXECUTES the action */}
                 {msg.suggestedActions.length > 0 && !msg.streaming && (
                   <div className="flex flex-wrap gap-2 pt-1">
                     {msg.suggestedActions.filter((a) => permitted.includes(a)).map((a) => {
                       const Icon = ACTION_ICON[a] || Wrench
+                      // Use the proposed action's pre-filled args when this tile is the
+                      // proposed one; otherwise pass the conversation context.
+                      const args = msg.proposedAction?.action === a
+                        ? msg.proposedAction.args
+                        : { target: msg.proposedAction?.target ?? null, request: 'from the current conversation' }
+                      // Disable a tile once it's been run (avoid double-firing).
+                      const alreadyRun = msg.actionResults.some((r) => r.label === (ACTION_META[a]?.label || a) && r.status !== 'denied')
                       return (
-                        <Button key={a} variant="outline" size="sm" onClick={() => runAction(a)} disabled={streaming} className="h-8 gap-1.5 text-xs">
+                        <Button key={a} variant="outline" size="sm" onClick={() => runAction(msg.id, a, args)} disabled={alreadyRun} className="h-8 gap-1.5 text-xs">
                           <Icon className="size-3.5" /> {ACTION_META[a]?.label || a}
                         </Button>
                       )

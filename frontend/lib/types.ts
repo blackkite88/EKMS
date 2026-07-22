@@ -70,6 +70,7 @@ export type SSEEvent =
   | { type: 'confidence'; level: 'high' | 'medium' | 'low'; sourceCount: number }
   | { type: 'compliance_gaps'; count: number; gaps: ComplianceGap[] }
   | { type: 'suggested_actions'; actions: string[] }
+  | { type: 'proposed_action'; action: string; target: string | null; args: Record<string, unknown> }
   | { type: 'tool_call'; name: string; arguments: Record<string, unknown> }
   | { type: 'tool_result'; name: string; result: Record<string, unknown>; mode: 'live' | 'simulated' | 'internal' | 'error' | 'denied' }
   | { type: 'done'; elapsedMs?: number }
@@ -140,6 +141,10 @@ export interface ChatMessage {
   citations: Citation[]
   toolCalls: { name: string; result: Record<string, unknown>; mode: string }[]
   suggestedActions: string[]
+  // A proposed action (the AI offered it; runs only when the user clicks a tile).
+  proposedAction: { action: string; target: string | null; args: Record<string, unknown> } | null
+  // Result text after the user confirms an action tile.
+  actionResults: { label: string; status: 'running' | 'done' | 'denied'; message: string }[]
   confidence: { level: string; sourceCount: number } | null
   complianceGaps: ComplianceGap[]
   routing: { decision: string; rewritten: string | null } | null

@@ -18,6 +18,7 @@ import workOrdersRouter from './routes/workorders.js';
 import notificationsRouter from './routes/notifications.js';
 import reportsRouter from './routes/reports.js';
 import documentsRouter from './routes/documents.js';
+import actionsRouter from './routes/actions.js';
 
 import { rateLimiter } from './middleware/rateLimiter.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
@@ -57,6 +58,7 @@ app.use('/work-orders', workOrdersRouter);
 app.use('/notifications', notificationsRouter);
 app.use('/reports', reportsRouter);
 app.use('/documents', documentsRouter);
+app.use('/actions', actionsRouter);
 
 app.use(notFound);
 app.use(errorHandler);

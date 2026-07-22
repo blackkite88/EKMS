@@ -28,6 +28,25 @@ async function recordAction(userEmail, tool, args, result, mode) {
   }
 }
 
+// A human-readable confirmation (or denial) for a completed action — shown to
+// the user after they click a tile and the action actually runs.
+export function actionConfirmationText(action, result, mode) {
+  if (mode === 'denied') return result?.reason || "You don't have permission to perform that action.";
+  if (result?.error) return `The action could not be completed: ${result.error}`;
+  switch (action) {
+    case 'create_work_order':
+      return `✓ Work order ${result.wo_number} created${result.equipment_id ? ` for ${result.equipment_id}` : ''} (priority: ${result.priority}, status: ${result.status}). It's now in the Work Orders section.`;
+    case 'draft_notification':
+      return `✓ Notification sent to ${result.recipient}${result.related_to ? ` regarding ${result.related_to}` : ''}. They'll see it in their inbox.`;
+    case 'generate_rca_report':
+      return `✓ RCA report #${result.report_id} generated${result.equipment_id ? ` for ${result.equipment_id}` : ''} (${result.sections} sections). Available in Reports.`;
+    case 'generate_compliance_report':
+      return `✓ Compliance report #${result.report_id} generated covering ${result.gap_count} gap(s). Available in the Compliance section.`;
+    default:
+      return '✓ Action completed.';
+  }
+}
+
 export async function executeTool(name, args, user) {
   const handler = HANDLERS[name];
   if (!handler) throw new Error(`Unknown action: ${name}`);

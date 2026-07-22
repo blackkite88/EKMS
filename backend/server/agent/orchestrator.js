@@ -17,7 +17,7 @@ import { buildRetrievalContext, buildGraphContext, buildUserMessage, SYSTEM_PROM
 import { RCA_SYSTEM_PROMPT, buildRcaContext, gatherRca } from './rca.js';
 import { COMPLIANCE_SYSTEM_PROMPT, buildComplianceContext, gatherCompliance } from './compliance.js';
 import { buildMemoryContext, recordTurn } from './memory.js';
-import { executeTool } from '../mcp/client.js';
+import { canPerform } from '../auth/action-policy.js';
 import { writeAudit } from '../middleware/auditLogger.js';
 import { createLogger } from '../utils/logger.js';
 
@@ -79,23 +79,32 @@ function confidenceOf(retrieval, graph) {
   return { level, sourceCount: sources };
 }
 
-// A human-readable confirmation (or denial) for a completed action.
-function actionConfirmationText(action, result, mode) {
-  if (mode === 'denied') {
-    return result?.reason || "You don't have permission to perform that action.";
-  }
-  if (result?.error) return `The action could not be completed: ${result.error}`;
+// A human-readable PROPOSAL — what the AI would do if the user confirms. It does
+// NOT perform the action; it describes it and invites a click.
+function actionProposalText(action, target, message) {
+  const t = target ? ` for **${target}**` : '';
   switch (action) {
     case 'create_work_order':
-      return `✓ Work order **${result.wo_number}** created${result.equipment_id ? ` for ${result.equipment_id}` : ''} (priority: ${result.priority}, status: ${result.status}). It's now in the Work Orders section.`;
+      return `I can raise a work order${t} based on this. Review the details and click **Create Work Order** below to file it.`;
     case 'draft_notification':
-      return `✓ Notification sent to **${result.recipient}**${result.related_to ? ` regarding ${result.related_to}` : ''}. They'll see it in their inbox.`;
+      return `I can notify the relevant team${t} about this. Click **Notify Team** below to send it.`;
     case 'generate_rca_report':
-      return `✓ RCA report **#${result.report_id}** generated${result.equipment_id ? ` for ${result.equipment_id}` : ''} (${result.sections} sections). Available in Reports.`;
+      return `I can generate a formal Root Cause Analysis report${t}. Click **Generate RCA Report** below to produce it.`;
     case 'generate_compliance_report':
-      return `✓ Compliance report **#${result.report_id}** generated covering ${result.gap_count} gap(s). Available in the Compliance section.`;
+      return `I can compile a compliance evidence report covering the current gaps. Click **Compliance Report** below to generate it.`;
     default:
-      return '✓ Action completed.';
+      return `I can perform that action — click the button below to confirm.`;
+  }
+}
+
+// The primary proposed action first, plus a sensible companion offer.
+function proposedActionSet(primary) {
+  switch (primary) {
+    case 'create_work_order': return ['create_work_order', 'draft_notification'];
+    case 'generate_rca_report': return ['generate_rca_report', 'create_work_order'];
+    case 'generate_compliance_report': return ['generate_compliance_report', 'create_work_order'];
+    case 'draft_notification': return ['draft_notification'];
+    default: return [primary];
   }
 }
 
@@ -137,23 +146,35 @@ export async function runQuery({ query: message, user, sessionId, stream }) {
     return;
   }
 
-  // 2b. ACTION — permission-gated tool dispatch with a confirmation message.
+  // 2b. ACTION — PROPOSE, don't execute. The AI explains what it would do and
+  //     offers action tile(s); the action only runs when the user clicks a tile
+  //     (which calls POST /actions/:action/execute). This keeps actions a
+  //     deliberate, human-approved step rather than something the AI auto-fires.
   if (routed.type === 'action') {
-    stream.toolCall(routed.action, { target: routed.target, request: message });
-    let confirmation = '';
-    try {
-      const { result, mode } = await executeTool(routed.action, { target: routed.target, query: searchQuery, user }, user);
-      stream.toolResult(routed.action, result, mode);
-      confirmation = actionConfirmationText(routed.action, result, mode);
-    } catch (err) {
-      stream.toolResult(routed.action, { error: err.message }, 'error');
-      confirmation = `I couldn't complete that action: ${err.message}`;
+    const perm = canPerform(user, routed.action);
+    if (!perm.allowed) {
+      // The user can't perform this action at all — say so, offer nothing.
+      stream.text(perm.reason);
+      await recordTurn(sessionId, user.email, 'user', message);
+      await recordTurn(sessionId, user.email, 'assistant', perm.reason);
+      await writeAudit({ userEmail: user.email, action: 'action_denied', query: message, metadata: { tool: routed.action } });
+      stream.done({ elapsedMs: Date.now() - startedAt });
+      return;
     }
-    // Stream the confirmation as text so the user always gets a readable reply.
-    stream.text(confirmation);
+
+    const proposal = actionProposalText(routed.action, routed.target, message);
+    stream.text(proposal);
+    // Offer the proposed action (pre-filled) plus any sensible companions.
+    stream.send({
+      type: 'proposed_action',
+      action: routed.action,
+      target: routed.target || null,
+      args: { target: routed.target || null, query: searchQuery, request: message },
+    });
+    stream.send({ type: 'suggested_actions', actions: proposedActionSet(routed.action) });
     await recordTurn(sessionId, user.email, 'user', message);
-    await recordTurn(sessionId, user.email, 'assistant', confirmation);
-    await writeAudit({ userEmail: user.email, action: 'mcp_action', query: message, metadata: { tool: routed.action } });
+    await recordTurn(sessionId, user.email, 'assistant', proposal);
+    await writeAudit({ userEmail: user.email, action: 'action_proposed', query: message, metadata: { tool: routed.action } });
     stream.done({ elapsedMs: Date.now() - startedAt });
     return;
   }

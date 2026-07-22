@@ -90,6 +90,16 @@ export const api = {
   document(token: string, id: string): Promise<{ id: string; source_type: string; filename: string; content: string }> {
     return request(`/documents/${encodeURIComponent(id)}`, {}, token)
   },
+
+  // Execute an action (called when the user clicks an action tile). Returns the
+  // confirmation message + result, or a 403 with a denial message.
+  executeAction(
+    token: string,
+    action: string,
+    args: Record<string, unknown>,
+  ): Promise<{ action: string; mode: string; result: Record<string, unknown>; message: string }> {
+    return request(`/actions/${action}/execute`, { method: 'POST', body: JSON.stringify(args) }, token)
+  },
 }
 
 /**
