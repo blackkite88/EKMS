@@ -1,184 +1,129 @@
-# Nexora Knowledge Brain
+# AssetBrain — Industrial Knowledge Intelligence
 
-**Nexora Knowledge Brain** is an enterprise decision-intelligence demo built as a full-stack monorepo.
-It pairs a Node.js/Express backend with a Next.js frontend to show a secure AI assistant that:
+**AssetBrain** is an AI-powered industrial knowledge platform for a process plant (*Bharat Process Industries*). It unifies a plant's fragmented documents — equipment records, maintenance work orders, inspection reports, failure histories, OEM manuals, procedures, and regulations — into one queryable, reasoning, and actionable brain.
 
-- reasons over a live decision graph,
-- enforces Attribute-Based Access Control (ABAC),
-- streams step-by-step reasoning,
-- and executes actions through MCP-enabled integrations.
+Built as a full-stack monorepo: a Node.js/Express backend and a Next.js frontend.
+
+## What it does
+
+1. **Reasons, not just retrieves** — models plant knowledge as a decision/causal **graph** (Neo4j). Answering *"why did pump P-101 fail?"* walks a causal chain across work orders, inspections, manuals, and past failures that no single document contains.
+2. **Root Cause Analysis** — a dedicated RCA agent reasons like a reliability engineer: immediate cause → contributing factors → systemic root cause → similar past failures → recommendations.
+3. **Compliance intelligence** — detects regulatory gaps (OISD / PESO / Factory Act) by comparing mandated inspection intervals against actual records.
+4. **Role-governed actions** — creates work orders, sends notifications, and generates reports — but only when a user is *permitted* and *clicks to confirm*.
+5. **Access-aware** — Attribute-Based Access Control on both reading knowledge and taking actions. A field operator sees far less than a reliability engineer or plant manager.
+6. **Live reasoning visualization** — the knowledge graph lights up as the AI reasons, and goes dark exactly where a user's clearance ends.
 
 ## Project structure
 
 ```
 EKMS/
-├── backend/     ← API server, ingestion, GraphRAG, ABAC, MCP actions, eval harness
-├── frontend/    ← Next.js UI, login, streaming chat, live graph visualization, audit/ sources
-└── docs/        ← architecture design spec and supporting documentation
+├── backend/     ← API server, ingestion, GraphRAG, ABAC, actions, eval harness
+├── frontend/    ← Next.js UI: copilot, work orders, notifications, compliance, live graph
+└── docs/        ← architecture spec and supporting documentation
 ```
-
-## What this demo shows
-
-1. **Graph-based reasoning** — queries traverse a Neo4j decision graph instead of only retrieving documents.
-2. **Access-aware answers** — user identity and clearance determine what knowledge is visible.
-3. **Live reasoning visualization** — graph nodes light up while the assistant thinks.
-4. **Action execution** — the system can draft emails and create tickets through MCP actions.
 
 ## Tech stack
 
-- Backend: Node.js, Express, ES Modules
-- Frontend: Next.js App Router, React, Tailwind CSS, Cytoscape.js
-- LLM: Groq (`llama-3.3-70b-versatile`)
-- Embeddings: Ollama local or Jina cloud
-- Vector database: ChromaDB
-- Graph database: Neo4j
-- Relational storage: Postgres
-- Retrieve-and-rank: BM25 + vectors + optional Jina reranker
-- Streaming: Server-Sent Events (SSE)
-- Actions: MCP integration with Gmail/Jira
+- **Backend**: Node.js, Express, ES Modules
+- **Frontend**: Next.js App Router, React, Tailwind CSS, D3 (graph)
+- **LLM**: Groq (`llama-3.3-70b-versatile`)
+- **Embeddings**: Ollama local or Jina cloud
+- **Vector database**: ChromaDB
+- **Graph database**: Neo4j
+- **Relational storage**: Postgres (users, memory, audit, work orders, notifications, reports)
+- **Retrieval**: BM25 + vectors + Jina reranker
+- **Streaming**: Server-Sent Events (SSE)
 
-## Demo users
+## Demo users (password `demo`)
 
-All demo users use password `demo`.
+| Email | Role | Clearance | Can see / do |
+|---|---|---|---|
+| `manager@bpi.com` | Plant Manager | 5 | everything, incl. safety incidents; all actions |
+| `safety@bpi.com` | Safety Lead | 5 | safety + engineering + all below |
+| `reliability@bpi.com` | Reliability Engineer | 4 | maintenance/failure records; RCA + compliance reports |
+| `technician@bpi.com` | Maintenance Technician | 2 | maintenance records; create work orders + RCA |
+| `operator@bpi.com` | Field Operator | 1 | public operations only; can be notified, **cannot** create work orders |
 
-| Email | Role | Intended view |
-|---|---|---|
-| `cto@nexora.com` | CTO | full access, including security breach details |
-| `security@nexora.com` | Security lead | breach + engineering context |
-| `eng.lead@nexora.com` | Engineering manager | payments + infra reasoning |
-| `engineer@nexora.com` | Engineer | public/engineer knowledge only; no breach or confidential payments details |
-| `intern@nexora.com` | Intern | public-only access |
+Note: a field operator asking "why did P-101 fail?" is walled off (the failure records are above their clearance), while a reliability engineer gets the full RCA — same question, different access.
 
 ## Setup
 
-### 1. Start backend infrastructure
-
+### 1. Start infrastructure (Docker)
 ```bash
 cd backend
-docker compose up -d
+docker compose up -d          # Neo4j + Postgres + ChromaDB
 ```
 
 ### 2. Configure environment
+```bash
+cd backend
+cp .env.example .env          # set GROQ_API_KEY (required); JINA_API_KEY if using Jina
+```
+
+> **Groq free-tier limit:** 100,000 tokens/day. Ingestion + a few queries can exhaust it (HTTP 429). If answers go empty, that's the daily cap resetting — not a bug. The graph/ABAC layers work without the LLM.
+
+### 3. Install + ingest
+```bash
+npm install
+npm run ingest:reset          # builds vectors + the knowledge graph (~1 min)
+```
+
+### 4. Start the backend
+```bash
+npm start                     # API on http://localhost:3001
+```
+
+### 5. Start the frontend
+```bash
+cd ../frontend
+cp .env.example .env.local    # points the UI at the backend
+npm install
+npm run dev                   # UI on http://localhost:3000
+```
+
+Open http://localhost:3000 and sign in as any demo user.
+
+> On a corporate/Zscaler machine, run `npm run certs:zscaler` in `backend/` once, then use the `:zscaler` script variants.
+
+## The 5 sections
+
+- **Copilot** — ask about equipment, failures, or compliance; get cited, permission-aware answers with the graph lighting up. Contextual action tiles appear when an action is relevant (the AI proposes; you click to execute).
+- **Knowledge Graph** — the full access-filtered plant graph; the active reasoning path highlights during a query.
+- **Work Orders** — real work orders (role-filtered), created via the copilot.
+- **Notifications** — your inbox for alerts directed to you or your team.
+- **Compliance** — a live regulatory gap scan + generated compliance reports.
+
+## Demo script (5 beats)
+
+| # | As | Ask / do | Shows |
+|---|----|----------|-------|
+| 1 | reliability | "Why did pump P-101 fail?" | RCA — graph lights up, root cause = SOP gap, cited |
+| 2 | reliability | "Has this happened before?" | follow-up rewrite → the P-102 pattern (SIMILAR_TO) |
+| 3 | operator | same "why did P-101 fail?" | 🔒 walled off — 0 nodes, "above your access level" |
+| 4 | technician | "Create a work order to fix the SOP" → click tile | proposal → confirm → real WO created |
+| 5 | reliability | "What compliance gaps exist?" | 8 gaps detected, cited |
+
+## Evaluation
 
 ```bash
 cd backend
-cp .env.example .env
+npm run evals                 # measured metrics → EVAL_REPORT.md
 ```
+Reports entity-extraction accuracy, graph linkage completeness, answer quality, access-control compliance, compliance-gap detection, and time-to-answer.
 
-Edit `.env` and set:
+## API (key endpoints)
 
-- `GROQ_API_KEY` (required)
-- `JINA_API_KEY` (optional, for reranking via Jina)
-- `EMBEDDING_PROVIDER=ollama` or `jina`
-
-### 3. Install backend dependencies
-
-```bash
-npm install
-```
-
-### 4. Ingest data
-
-```bash
-npm run ingest:reset
-```
-
-This builds vectors, loads documents, and constructs the decision graph.
-
-### 5. Start the backend API
-
-```bash
-npm start
-```
-
-The API will run on `http://localhost:3001` by default.
-
-### 6. Start the frontend
-
-```bash
-cd ../frontend
-cp .env.example .env.local
-npm install
-npm run dev
-```
-
-Open `http://localhost:3000` and sign in with one of the demo users.
-
-## Frontend behavior
-
-- Login page supports demo identity selection.
-- Chat panel streams answer tokens and citation highlights.
-- Graph canvas animates live traversal events from the backend.
-- Audit and sources pages expose ABAC policies and document coverage.
-
-## Important notes
-
-- `POST /query` uses SSE to stream both reasoning events and answer tokens.
-- The frontend sends the JWT to the backend and receives a filtered graph based on the user's access scope.
-- ABAC is enforced in retrieval, graph traversal, and every action.
-- Actions are simulated unless real Jira/Gmail credentials are provided.
+| Method | Route | Description |
+|--------|-------|-------------|
+| `POST` | `/auth/login` | `{email,password}` → `{token, user}` (with permitted actions) |
+| `POST` | `/query` | **SSE** — routed answer (copilot / RCA / compliance / action proposal) |
+| `GET`  | `/graph` | access-filtered knowledge graph |
+| `POST` | `/actions/:action/execute` | run an action (permission-gated) — called by action tiles |
+| `GET`  | `/work-orders` · `/notifications` · `/reports` | role-filtered artifact lists |
+| `GET`  | `/documents/:id` | source document behind a citation |
 
 ## Documentation
 
-- `backend/README.md` — backend architecture, API reference, event contract, detailed setup.
-- `frontend/README.md` — frontend setup, UI behavior, and integration details.
-- `docs/nexora-build-spec.pdf` — full design and architectural decisions.
-
-## Demo video script
-
-### 1. Intro + problem statement
-
-- Show the app landing page and explain the goal: an AI assistant for enterprise decision intelligence.
-- Emphasize that this demo blends reasoning, access control, and action execution.
-- Mention the two main components: backend intelligence and frontend visualization.
-
-### 2. Start the system
-
-- Show `docker compose up -d` inside `backend/`.
-- Show `cp .env.example .env`, note `GROQ_API_KEY` and optional `JINA_API_KEY`.
-- Run `npm install` and `npm run ingest:reset`.
-- Show the backend starting on `http://localhost:3001`.
-- Open `http://localhost:3000` and land on the login page.
-
-### 3. Show the core experience
-
-- Log in as `eng.lead@nexora.com`.
-- Ask: "Why was the Payments feature delayed?"
-- Highlight live graph activation: nodes light up, edges traverse, and the answer appears with citations.
-- Point out that the system is not just searching docs—it is reasoning through a decision graph.
-
-### 4. ABAC contrast
-
-- Log out and log in as `cto@nexora.com`.
-- Ask: "Summarize the security incident."
-- Show the detailed breach answer.
-- Then log in as `intern@nexora.com` and ask the same question.
-- Emphasize the restricted data wall: the graph goes dark at blocked nodes and the answer is appropriately scoped.
-
-### 5. Action execution
-
-- As `eng.lead@nexora.com`, ask: "Draft a follow-up email about the API rate limiting issue."
-- Show the assistant calling an MCP action and returning a draft or simulated result.
-- Explain that this is how the system can act on behalf of users safely.
-
-### 6. Wrap up and key takeaways
-
-- Recap the three core strengths: reasoning, access-aware answers, and actionable intelligence.
-- Mention that the backend includes an eval harness for quality and access correctness.
-- Close with the idea that this architecture is ready for enterprise-grade secure AI workflows.
-
-## Demo questions
-
-Use these scripted prompts during the video:
-
-1. "Why was the Payments feature delayed?" — shows GraphRAG reasoning and citation tracing.
-2. "Who approved the database migration?" — shows factual retrieval and trust signals.
-3. "Summarize the security incident." — show CTO vs intern access contrast.
-4. "Draft a follow-up email about the API rate limiting issue." — shows MCP action execution.
-5. "What chain of events led to the security breach?" — reinforces graph traversal and ABAC.
-
----
-
-## License
-
-This demo is provided for evaluation and demonstration purposes.
+- `backend/README.md` — backend architecture, API, event contract, setup
+- `frontend/README.md` — frontend setup and integration
+- `docs/nexora-build-spec.pdf` — the original design/architecture spec
