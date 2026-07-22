@@ -69,6 +69,21 @@ function parseStructured(content: string): { title: string | null; fields: Recor
   }
 }
 
+// Strip a leading YAML frontmatter block (--- … ---) from a text/markdown doc.
+// Only removes the FIRST fenced block at the very top; a later "---" (horizontal
+// rule) is left untouched. If the closing fence is missing, content is returned
+// unchanged rather than swallowing the whole document.
+function stripFrontmatter(content: string): string {
+  const lines = content.split('\n')
+  if (lines[0]?.trim() !== '---') return content
+  for (let i = 1; i < lines.length; i++) {
+    if (lines[i].trim() === '---') {
+      return lines.slice(i + 1).join('\n').replace(/^\n+/, '')
+    }
+  }
+  return content // no closing fence — not real frontmatter, leave as-is
+}
+
 // Slide-over that shows the raw source document behind a citation. ABAC-checked
 // on the backend — a 403 renders a "restricted" state.
 export function DocumentDrawer({ id, onClose }: { id: string | null; onClose: () => void }) {
@@ -124,11 +139,12 @@ export function DocumentDrawer({ id, onClose }: { id: string | null; onClose: ()
                 </div>
               )
             }
-            // Plain text / markdown source — show it as readable prose.
+            // Plain text / markdown source — drop the YAML frontmatter and
+            // show it as readable prose.
             return (
               <div className="flex flex-col gap-3">
                 <p className="font-mono text-xs text-muted-foreground">{doc.filename}</p>
-                <div className="whitespace-pre-wrap break-words text-sm leading-relaxed text-foreground/90">{doc.content}</div>
+                <div className="whitespace-pre-wrap break-words text-sm leading-relaxed text-foreground/90">{stripFrontmatter(doc.content)}</div>
               </div>
             )
           })()}
