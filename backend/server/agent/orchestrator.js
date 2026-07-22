@@ -11,11 +11,11 @@
 //   5. records memory + writes the audit log
 import { getGroqClient, GROQ_MODEL } from '../config/groq.js';
 import { route } from './router.js';
-import { traverse } from '../graph/traversal.js';
+import { traverse, listPeople } from '../graph/traversal.js';
 import { hybridSearch } from '../retrieval/hybrid.js';
 import { buildRetrievalContext, buildGraphContext, buildUserMessage, SYSTEM_PROMPT } from './prompts.js';
 import { RCA_SYSTEM_PROMPT, buildRcaContext, gatherRca } from './rca.js';
-import { COMPLIANCE_SYSTEM_PROMPT, buildComplianceContext, gatherCompliance } from './compliance.js';
+import { COMPLIANCE_SYSTEM_PROMPT, buildComplianceContext, gatherCompliance, detectComplianceGaps } from './compliance.js';
 import { buildMemoryContext, recordTurn } from './memory.js';
 import { canPerform } from '../auth/action-policy.js';
 import { writeAudit } from '../middleware/auditLogger.js';
@@ -67,6 +67,35 @@ async function streamAnswer(stream, systemPrompt, userMessage, { temperature = 0
     stream.error(`Model error: ${err.message}`);
   }
   return answerText;
+}
+
+// Does the query ask to enumerate people (a roster)? e.g. "name all employees",
+// "list the staff", "who is on the maintenance team".
+function isRosterQuery(query) {
+  const q = query.toLowerCase();
+  const peopleWord = /\b(employee|employees|staff|people|personnel|team members|workforce|everyone|technicians|engineers|operators)\b/.test(q);
+  const listWord = /\b(all|list|name|names|who are|everyone|every|show me the)\b/.test(q);
+  const teamRoster = /\bwho (is|are|'s) (on|in) (the )?\w+ team\b/.test(q);
+  return (peopleWord && listWord) || teamRoster;
+}
+
+// If the roster query names a team/department/unit, return that scope keyword.
+function teamScopeOf(query) {
+  const q = query.toLowerCase();
+  const m = q.match(/\b(maintenance|operations|engineering|safety|inspection|management|unit-1|unit-2|qa|team-a|team-b)\b/);
+  return m ? m[1] : null;
+}
+
+// True when the request references a compliance gap but doesn't say WHICH one
+// (no specific equipment tag like P-101 or regulation id like OISD-STD-106).
+function mentionsUnspecifiedComplianceGap(message) {
+  const q = message.toLowerCase();
+  if (!/\bcompliance gap/.test(q) && !/\bgap(s)?\b/.test(q)) return false;
+  if (!/\bcompliance|gap|overdue|inspection|non-?complian/.test(q)) return false;
+  // If they named a specific equipment tag or regulation, it's already specific.
+  const hasEquip = /\b[A-Z]{1,2}-\d{2,4}\b/.test(message);
+  const hasReg = /\b(OISD|PESO|FACTORY-ACT)[-A-Z0-9]*/i.test(message);
+  return !hasEquip && !hasReg;
 }
 
 // Heuristic confidence from retrieval strength + graph coverage.
@@ -162,6 +191,28 @@ export async function runQuery({ query: message, user, sessionId, stream }) {
       return;
     }
 
+    // Clarify vague "compliance gap" references BEFORE proposing an action.
+    // If the request is about "a/one/some compliance gap" without naming which
+    // (no specific regulation/equipment), show the gaps and ask which one — so
+    // the action targets a real gap rather than a hand-wave.
+    if (mentionsUnspecifiedComplianceGap(message)) {
+      let gaps = [];
+      try { gaps = await detectComplianceGaps(user); } catch (err) { log.warn(`gap detect failed: ${err.message}`); }
+      if (gaps.length > 0) {
+        stream.send({ type: 'compliance_gaps', count: gaps.length, gaps });
+        const list = gaps.slice(0, 8).map((g, i) =>
+          `${i + 1}. **${g.equipment}** — ${g.activity} (${g.regulation})${g.overdue_days != null ? `, ${g.overdue_days}d overdue` : ''}`
+        ).join('\n');
+        const who = routed.target ? ` for **${routed.target}**` : '';
+        const clarify = `There are ${gaps.length} open compliance gaps. Which one${who} should I act on?\n\n${list}\n\nTell me which gap (by equipment or number) and I'll propose the action.`;
+        stream.text(clarify);
+        await recordTurn(sessionId, user.email, 'user', message);
+        await recordTurn(sessionId, user.email, 'assistant', clarify);
+        stream.done({ elapsedMs: Date.now() - startedAt });
+        return;
+      }
+    }
+
     const proposal = actionProposalText(routed.action, routed.target, message);
     stream.text(proposal);
     // Offer the proposed action (pre-filled) plus any sensible companions.
@@ -230,6 +281,20 @@ export async function runQuery({ query: message, user, sessionId, stream }) {
     graph = await traverse(searchQuery, user, (ev) => stream.sendPaced(ev));
   } catch (err) {
     log.warn(`Traversal failed (continuing with retrieval only): ${err.message}`);
+  }
+
+  // Roster queries ("name all employees", "who is on the maintenance team")
+  // need the FULL people list, not just the vector top-K. Fetch all accessible
+  // Person nodes and merge them into the graph context.
+  if (isRosterQuery(searchQuery)) {
+    try {
+      const scope = teamScopeOf(searchQuery);
+      const people = await listPeople(user, { scope });
+      const existing = new Set(graph.nodes.map((n) => n.id));
+      for (const p of people) if (!existing.has(p.id)) graph.nodes.push(p);
+    } catch (err) {
+      log.warn(`Roster augmentation failed: ${err.message}`);
+    }
   }
   let retrieval = { results: [], deniedCount: 0 };
   try {

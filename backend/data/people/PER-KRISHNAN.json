@@ -1,0 +1,17 @@
+{
+  "id": "person:Meera Krishnan",
+  "name": "Meera Krishnan",
+  "email": "reliability@bpi.com",
+  "title": "Reliability Engineer",
+  "department": "engineering",
+  "unit": "unit-2",
+  "specialization": "Reliability engineering & root-cause analysis",
+  "equipment_focus": ["P-101", "P-102"],
+  "access": {
+    "department": "engineering",
+    "unit": "unit-2",
+    "min_clearance": 1,
+    "sensitivity": "public"
+  },
+  "bio": "Meera Krishnan is a reliability engineer in Unit-2 (engineering department). She leads root-cause analyses on rotating equipment failures, defines maintenance strategy, and drives corrective actions such as the SOP-SEAL-REPL update after the P-101 and P-102 bearing failures."
+}

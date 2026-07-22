@@ -1,0 +1,17 @@
+{
+  "id": "person:Sunil Yadav",
+  "name": "Sunil Yadav",
+  "email": "operator@bpi.com",
+  "title": "Field Operator",
+  "department": "operations",
+  "unit": "unit-2",
+  "specialization": "Unit-2 field operations & tank farm",
+  "equipment_focus": ["T-501", "T-502"],
+  "access": {
+    "department": "operations",
+    "unit": "unit-2",
+    "min_clearance": 1,
+    "sensitivity": "public"
+  },
+  "bio": "Sunil Yadav is a field operator in Unit-2, running day-to-day operations for the tank farm (T-501, T-502) — gauging, transfers, and raising operator-level maintenance requests. He is part of the Ops Team."
+}

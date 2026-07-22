@@ -82,12 +82,17 @@ export async function createWorkOrder(args, user) {
   const description = args.description || args.query || 'Created via AssetBrain assistant.';
   const priority = ['low', 'medium', 'high', 'critical'].includes(args.priority) ? args.priority : 'medium';
 
+  // Assign to a named person when one is explicitly requested or clearly owns
+  // the equipment; otherwise the responsible department.
+  const owner = await resolveNotificationTarget(target);
+  const assignedTo = args.assigned_to || owner.person || owner.department || 'maintenance';
+
   const { rows } = await query(
     `INSERT INTO work_orders (wo_number, title, description, equipment_id, priority, status, created_by, assigned_to, access_department, access_unit, access_min_clearance)
      VALUES ($1,$2,$3,$4,$5,'open',$6,$7,$8,$9,$10) RETURNING wo_number, status`,
-    [num_, title, description, target, priority, user?.email, 'maintenance', access.department, access.unit, access.min_clearance]
+    [num_, title, description, target, priority, user?.email, assignedTo, access.department, access.unit, access.min_clearance]
   );
-  return { mode: 'live', result: { wo_number: rows[0].wo_number, title, equipment_id: target, priority, status: rows[0].status } };
+  return { mode: 'live', result: { wo_number: rows[0].wo_number, title, equipment_id: target, priority, status: rows[0].status, assigned_to: assignedTo } };
 }
 
 // ── 2. draft_notification ───────────────────────────────────────────

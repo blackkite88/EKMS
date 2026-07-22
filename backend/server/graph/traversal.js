@@ -223,3 +223,39 @@ export async function traverse(query, user, onStep = () => {}, options = {}) {
     seeds,
   };
 }
+
+// Fetch ALL Person nodes (ABAC-filtered) for roster-style queries like "name
+// all employees" or "who is on the maintenance team" — where the vector top-K
+// would only surface a handful. Optionally scope by department/unit keyword.
+export async function listPeople(user, { scope = null } = {}) {
+  const session = getSession();
+  try {
+    const r = await session.run(
+      `MATCH (p:Person) RETURN p.id AS id, properties(p) AS props ORDER BY p.name`
+    );
+    const people = [];
+    for (const rec of r.records) {
+      const props = rec.get('props') || {};
+      if (!canAccess(user, nodeAccess(props))) continue;
+      if (scope) {
+        const s = scope.toLowerCase();
+        const hay = `${props.department || ''} ${props.unit || ''} ${props.name || ''} ${props.specialization || ''}`.toLowerCase();
+        if (!hay.includes(s)) continue;
+      }
+      people.push({
+        id: rec.get('id'),
+        label: 'Person',
+        title: props.title || props.name || rec.get('id'),
+        name: props.name || null,
+        person_title: props.person_title || null,
+        department: props.department || null,
+        unit: props.unit || null,
+        specialization: props.specialization || null,
+        email: props.email || null,
+      });
+    }
+    return people;
+  } finally {
+    await session.close();
+  }
+}

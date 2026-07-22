@@ -1,0 +1,16 @@
+{
+  "id": "person:Anita Deshmukh",
+  "name": "Anita Deshmukh",
+  "email": "manager@bpi.com",
+  "title": "Plant Manager",
+  "department": "management",
+  "unit": "all",
+  "specialization": "Plant operations management & governance",
+  "access": {
+    "department": "management",
+    "unit": "all",
+    "min_clearance": 1,
+    "sensitivity": "public"
+  },
+  "bio": "Anita Deshmukh is the Plant Manager, with overall accountability for operations, maintenance, safety, and compliance across all units. She approves major corrective actions, work-order prioritization, and compliance remediation."
+}

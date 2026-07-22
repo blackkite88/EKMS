@@ -1,0 +1,17 @@
+{
+  "id": "person:Vikram Rao",
+  "name": "Vikram Rao",
+  "email": "safety@bpi.com",
+  "title": "Safety Lead",
+  "department": "safety",
+  "unit": "all",
+  "specialization": "Process safety, PSV integrity & compliance",
+  "equipment_focus": ["V-410", "V-411", "V-420"],
+  "access": {
+    "department": "safety",
+    "unit": "all",
+    "min_clearance": 1,
+    "sensitivity": "public"
+  },
+  "bio": "Vikram Rao is the plant Safety Lead, responsible for process safety across all units — pressure-relief valve integrity, confined-space procedures, and regulatory compliance (OISD/PESO/Factory Act). He signs off on safety-critical inspections and compliance gaps."
+}

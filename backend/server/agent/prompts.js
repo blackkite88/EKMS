@@ -48,7 +48,13 @@ export function buildRetrievalContext(results) {
 export function buildGraphContext(graph) {
   if (!graph || !graph.nodes || graph.nodes.length === 0) return '';
   const nodeLines = graph.nodes
-    .map((n) => `  (${n.id}) [${labelToCitationTag(n.label) || n.label}] ${n.title || ''}`.trimEnd())
+    .map((n) => {
+      if (n.label === 'Person') {
+        const role = [n.person_title, n.department, n.unit, n.specialization].filter(Boolean).join(', ');
+        return `  (${n.id}) [PEOPLE] ${n.title || ''}${role ? ' — ' + role : ''}`.trimEnd();
+      }
+      return `  (${n.id}) [${labelToCitationTag(n.label) || n.label}] ${n.title || ''}`.trimEnd();
+    })
     .join('\n');
   const edgeLines = graph.edges
     .map((e) => `  (${e.from}) -[${e.relation}]-> (${e.to})`)
