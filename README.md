@@ -16,10 +16,9 @@ Built as a full-stack monorepo: a Node.js/Express backend and a Next.js frontend
 ## Project structure
 
 ```
-EKMS/
+assetbrain/
 ├── backend/     ← API server, ingestion, GraphRAG, ABAC, actions, eval harness
-├── frontend/    ← Next.js UI: copilot, work orders, notifications, compliance, live graph
-└── docs/        ← architecture spec and supporting documentation
+└── frontend/    ← Next.js UI: copilot, work orders, notifications, compliance, live graph
 ```
 
 ## Tech stack
@@ -85,11 +84,12 @@ Open http://localhost:3000 and sign in as any demo user.
 
 > On a corporate/Zscaler machine, run `npm run certs:zscaler` in `backend/` once, then use the `:zscaler` script variants.
 
-## The 5 sections
+## The 6 sections
 
 - **Copilot** — ask about equipment, failures, or compliance; get cited, permission-aware answers with the graph lighting up. Contextual action tiles appear when an action is relevant (the AI proposes; you click to execute).
 - **Knowledge Graph** — the full access-filtered plant graph; the active reasoning path highlights during a query.
 - **Work Orders** — real work orders (role-filtered), created via the copilot.
+- **Reports** — generated RCA and compliance reports, role-filtered.
 - **Notifications** — your inbox for alerts directed to you or your team.
 - **Compliance** — a live regulatory gap scan + generated compliance reports.
 
@@ -124,6 +124,5 @@ Reports entity-extraction accuracy, graph linkage completeness, answer quality, 
 
 ## Documentation
 
-- `backend/README.md` — backend architecture, API, event contract, setup
-- `frontend/README.md` — frontend setup and integration
-- `docs/nexora-build-spec.pdf` — the original design/architecture spec
+- `backend/README.md` — backend architecture, API, SSE event contract, setup
+- `frontend/README.md` — frontend setup and backend integration
